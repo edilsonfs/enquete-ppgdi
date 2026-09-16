@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Links da Oficina — PPGDI</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231c5cab'/%3E%3Cpath d='M12 20a4 4 0 010-5.7l2.1-2.1a4 4 0 015.7 5.7l-1 1' stroke='%23fff' stroke-width='2.2' fill='none' stroke-linecap='round'/%3E%3Cpath d='M20 12a4 4 0 010 5.7l-2.1 2.1a4 4 0 01-5.7-5.7l1-1' stroke='%23fff' stroke-width='2.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --ground: #f4f6f8;
+    --paper: #ffffff;
+    --ink: #0b1a26;
+    --ink-2: #51636f;
+    --ink-3: #8095a3;
+    --linha: #dde4ea;
+    --marca: #1c5cab;
+    --marca-2: #2a78d6;
+    --marca-fraca: #e8f0fa;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0d1218;
+      --paper: #161d22;
+      --ink: #e9eef2;
+      --ink-2: #a3b3bf;
+      --ink-3: #7b8d99;
+      --linha: #26313a;
+      --marca: #86b6ef;
+      --marca-2: #5598e7;
+      --marca-fraca: #17293d;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--ground); color: var(--ink);
+    font-family: var(--sans); line-height: 1.55; font-size: 16px; padding: 0 16px 4rem;
+  }
+  .envelope { max-width: 640px; margin: 0 auto; }
+
+  header { padding: 3rem 0 1.6rem; text-align: center; }
+  .marca-topo {
+    width: 54px; height: 54px; border-radius: 14px; background: var(--marca);
+    color: #fff; display: grid; place-content: center; margin: 0 auto 1.1rem;
+    font-size: 1.25rem; font-weight: 700; letter-spacing: -.02em;
+  }
+  .eyebrow { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--marca); font-weight: 600; margin: 0 0 .5rem; }
+  h1 { margin: 0 0 .5rem; font-size: clamp(1.5rem, 4.5vw, 2rem); line-height: 1.15; letter-spacing: -.015em; }
+  header p { margin: 0 auto; color: var(--ink-2); font-size: .95rem; max-width: 44ch; }
+
+  .grupo { margin-top: 1.8rem; }
+  .grupo h2 {
+    font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3);
+    font-weight: 600; margin: 0 0 .7rem; padding-left: .2rem;
+  }
+  .lista { display: grid; gap: .65rem; }
+
+  .link {
+    display: grid; grid-template-columns: 44px minmax(0,1fr) auto; align-items: center; gap: .9rem;
+    background: var(--paper); border: 1px solid var(--linha); border-radius: 12px;
+    padding: .95rem 1.05rem; text-decoration: none; color: inherit;
+  }
+  a.link:hover { border-color: var(--marca-2); background: var(--marca-fraca); }
+  a.link:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; }
+  .icone {
+    width: 44px; height: 44px; border-radius: 10px; background: var(--marca-fraca); color: var(--marca);
+    display: grid; place-content: center;
+  }
+  .icone svg { width: 22px; height: 22px; display: block; }
+  .texto strong { display: block; font-size: .98rem; font-weight: 600; }
+  .texto span { display: block; font-size: .84rem; color: var(--ink-2); }
+  .seta { color: var(--ink-3); font-size: 1.1rem; }
+
+  .link.desativado { opacity: .62; }
+  .selo {
+    font-size: .64rem; letter-spacing: .07em; text-transform: uppercase; font-weight: 700;
+    background: var(--linha); color: var(--ink-2); border-radius: 4px; padding: .15rem .4rem;
+    white-space: nowrap;
+  }
+
+  .destaque { border-color: var(--marca); }
+  .destaque .icone { background: var(--marca); color: #fff; }
+
+  .contador-vivo { margin-top: 1.6rem; text-align: center; font-size: .85rem; color: var(--ink-3); }
+  .contador-vivo b { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  footer { margin-top: 2.4rem; text-align: center; font-size: .8rem; color: var(--ink-3); }
+</style>
+</head>
+<body>
+<div class="envelope">
+
+  <header>
+    <div class="marca-topo" aria-hidden="true">PP2</div>
+    <p class="eyebrow">Percurso de Projeto 2 · PPGDI/UNICAP</p>
+    <h1>Links da oficina</h1>
+    <p>Tudo o que a turma precisa acessar, num lugar só.</p>
+  </header>
+
+  <section class="grupo">
+    <h2>Responda agora</h2>
+    <div class="lista">
+      <a class="link destaque" href="https://enquete.lexcode.tech">
+        <span class="icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></span>
+        <span class="texto"><strong>Enquete da turma</strong><span>Três perguntas, anônima, 20 segundos</span></span>
+        <span class="seta" aria-hidden="true">→</span>
+      </a>
+
+      <a class="link" href="https://enquete.lexcode.tech/qrcode">
+        <span class="icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM18 18h3v3h-3z" stroke-linecap="round"/></svg></span>
+        <span class="texto"><strong>QR code da enquete</strong><span>Para projetar na apresentação</span></span>
+        <span class="seta" aria-hidden="true">→</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="grupo">
+    <h2>Resultados ao vivo</h2>
+    <div class="lista">
+      <a class="link" href="https://enquete.lexcode.tech/resultado">
+        <span class="icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><rect x="5" y="11" width="3.5" height="7" rx="1"/><rect x="10.25" y="6" width="3.5" height="12" rx="1"/><rect x="15.5" y="14" width="3.5" height="4" rx="1"/></svg></span>
+        <span class="texto"><strong>Resultado da enquete</strong><span>Gráficos que atualizam a cada resposta</span></span>
+        <span class="seta" aria-hidden="true">→</span>
+      </a>
+
+      <a class="link" href="https://enquete.lexcode.tech/nuvem">
+        <span class="icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 000-9 6 6 0 00-11.6 1.6A3.7 3.7 0 006.5 19z"/></svg></span>
+        <span class="texto"><strong>Nuvem de palavras</strong><span>Os maiores desafios da turma</span></span>
+        <span class="seta" aria-hidden="true">→</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="grupo">
+    <h2>Ferramentas e material</h2>
+    <div class="lista">
+      <a class="link" href="https://oficina.lexcode.tech">
+        <span class="icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></span>
+        <span class="texto"><strong>Avaliador de problema de pesquisa</strong><span>Diagnóstico por rubrica, com nível de análise</span></span>
+        <span class="seta" aria-hidden="true">→</span>
+      </a>
+
+      <span class="link desativado">
+        <span class="icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 012-2h13v18H6.5A2.5 2.5 0 014 19.5z"/><path d="M8 7h7M8 11h7"/></svg></span>
+        <span class="texto"><strong>Cartilha da oficina</strong><span>Em elaboração — o link entra aqui</span></span>
+        <span class="selo">em breve</span>
+      </span>
+    </div>
+  </section>
+
+  <p class="contador-vivo" id="contador"></p>
+
+  <footer>Mestrado Profissional em Direito e Inovação · UNICAP</footer>
+
+</div>
+
+<script>
+// Caminho relativo de propósito: os dois domínios são servidos pelo mesmo app,
+// então /api/resultados funciona aqui sem cair no connect-src 'self' do CSP nem
+// precisar de CORS.
+fetch('/api/resultados')
+  .then((r) => r.json())
+  .then((d) => {
+    if (typeof d.total !== 'number' || !d.total) return;
+    document.getElementById('contador').innerHTML =
+      '<b>' + d.total + '</b> ' + (d.total === 1 ? 'pessoa já respondeu' : 'pessoas já responderam');
+  })
+  .catch(() => {});
+</script>
+</body>
+</html>

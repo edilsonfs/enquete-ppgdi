@@ -1,0 +1,16 @@
+{
+  "name": "enquete-ppgdi",
+  "version": "1.0.0",
+  "description": "Enquete de diagnóstico da fase da pesquisa — Percurso de Projeto 2, PPGDI/UNICAP",
+  "type": "module",
+  "main": "src/server.js",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "qrcode": "^1.5.4"
+  }
+}

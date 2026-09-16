@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enquete — Diagnóstico da Fase da Pesquisa</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Cpath d='M8 22V10h3v12H8zm6.5 0V14h3v8h-3zm6.5 0v-6h3v6h-3z' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --ground: #f4f6f8;
+    --paper: #ffffff;
+    --ink: #0b1a26;
+    --ink-2: #51636f;
+    --ink-3: #8095a3;
+    --linha: #dde4ea;
+    --marca: #1c5cab;
+    --marca-2: #2a78d6;
+    --marca-fraca: #e8f0fa;
+    --verde: #0f6b47;
+    --verde-fraca: #e3f1ea;
+    --vermelho: #a32b23;
+    --vermelho-fraca: #f8e8e6;
+    --raio: 12px;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0d1218;
+      --paper: #161d22;
+      --ink: #e9eef2;
+      --ink-2: #a3b3bf;
+      --ink-3: #7b8d99;
+      --linha: #26313a;
+      --marca: #86b6ef;
+      --marca-2: #5598e7;
+      --marca-fraca: #17293d;
+      --verde: #6fc79a;
+      --verde-fraca: #14301f;
+      --vermelho: #e58a81;
+      --vermelho-fraca: #351a19;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--ground); color: var(--ink);
+    font-family: var(--sans); line-height: 1.55; font-size: 16px;
+    padding: 0 16px 4rem;
+  }
+  .envelope { max-width: 680px; margin: 0 auto; }
+
+  header { padding: 2.4rem 0 1.4rem; }
+  .eyebrow {
+    font-size: .72rem; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--marca); font-weight: 600; margin: 0 0 .6rem;
+  }
+  h1 { margin: 0 0 .5rem; font-size: clamp(1.5rem, 4.5vw, 2rem); line-height: 1.15; letter-spacing: -.015em; text-wrap: balance; }
+  header p { margin: 0; color: var(--ink-2); font-size: .95rem; max-width: 52ch; }
+
+  fieldset {
+    background: var(--paper); border: 1px solid var(--linha); border-radius: var(--raio);
+    padding: 1.25rem; margin: 0 0 1rem; min-width: 0;
+  }
+  /* Título como div, não como <legend>: enunciado longo quebra em duas linhas e
+     uma legend rasga a borda do fieldset ao fazer isso. A acessibilidade vem do
+     role="group" + aria-labelledby no fieldset, não do elemento. */
+  .pergunta-titulo { font-weight: 600; font-size: 1.02rem; line-height: 1.35; margin: 0 0 .75rem; }
+  .pergunta-titulo .num {
+    display: inline-block; min-width: 1.5rem; height: 1.5rem; line-height: 1.5rem;
+    text-align: center; background: var(--marca); color: #fff; border-radius: 50%;
+    font-size: .8rem; margin-right: .5rem; font-variant-numeric: tabular-nums;
+  }
+  .ajuda { color: var(--ink-2); font-size: .87rem; margin: .1rem 0 .9rem; }
+
+  .opcoes { display: grid; gap: .5rem; }
+  .opcao {
+    display: flex; align-items: flex-start; gap: .7rem; padding: .8rem .9rem;
+    border: 1px solid var(--linha); border-radius: 9px; cursor: pointer; background: transparent;
+  }
+  .opcao:hover { border-color: var(--marca-2); background: var(--marca-fraca); }
+  .opcao input { margin: .25rem 0 0; accent-color: var(--marca-2); width: 18px; height: 18px; flex-shrink: 0; }
+  .opcao span { font-size: .95rem; }
+  .opcao:has(input:checked) { border-color: var(--marca); background: var(--marca-fraca); }
+  .opcao:has(input:checked) span { font-weight: 600; }
+  .opcao:focus-within { outline: 2px solid var(--marca); outline-offset: 2px; }
+
+  input[type=text] {
+    width: 100%; padding: .85rem .9rem; border: 1px solid var(--linha); border-radius: 9px;
+    font-family: inherit; font-size: 1.05rem; background: var(--paper); color: var(--ink);
+  }
+  input[type=text]:focus { outline: 2px solid var(--marca); outline-offset: -1px; border-color: var(--marca); }
+  .contador { font-size: .8rem; color: var(--ink-3); margin-top: .4rem; }
+  .contador.alerta { color: var(--vermelho); }
+
+  .btn {
+    background: var(--marca); color: #fff; border: 0; padding: .95rem 1.6rem; border-radius: 9px;
+    font-size: 1rem; font-weight: 600; cursor: pointer; font-family: inherit; width: 100%;
+    display: block; text-align: center; text-decoration: none;
+  }
+  .btn:disabled { opacity: .55; cursor: not-allowed; }
+  .btn.secundario { background: transparent; color: var(--marca); border: 1px solid var(--marca); }
+
+  .aviso {
+    background: var(--vermelho-fraca); border: 1px solid var(--vermelho); color: var(--vermelho);
+    padding: .8rem 1rem; border-radius: 9px; font-size: .9rem; margin-bottom: 1rem;
+  }
+  .oculto { display: none !important; }
+
+  .obrigado { background: var(--paper); border: 1px solid var(--linha); border-radius: var(--raio); padding: 2rem 1.5rem; text-align: center; }
+  .obrigado .marca-ok {
+    width: 56px; height: 56px; border-radius: 50%; background: var(--verde-fraca); color: var(--verde);
+    display: grid; place-content: center; font-size: 1.8rem; margin: 0 auto 1rem;
+  }
+  .obrigado h2 { margin: 0 0 .4rem; font-size: 1.3rem; }
+  .obrigado p { margin: 0 0 1.4rem; color: var(--ink-2); }
+  .obrigado .acoes { display: grid; gap: .6rem; }
+  .total { font-size: .85rem; color: var(--ink-3); margin-top: 1.2rem; }
+  .total b { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  footer { margin-top: 1.6rem; text-align: center; font-size: .82rem; color: var(--ink-3); }
+  footer a { color: var(--marca); }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<div class="envelope">
+
+  <header>
+    <p class="eyebrow">Percurso de Projeto 2 · PPGDI</p>
+    <h1>Enquete — Diagnóstico da fase da pesquisa</h1>
+    <p>Resposta anônima, leva menos de 20 segundos. Serve para ajustar a oficina ao ponto em que a turma realmente está.</p>
+  </header>
+
+  <div id="erro" class="aviso oculto"></div>
+
+  <form id="formulario">
+    <div id="campos"></div>
+    <button type="submit" class="btn" id="btnEnviar">Enviar resposta</button>
+  </form>
+
+  <section id="obrigado" class="obrigado oculto">
+    <div class="marca-ok" aria-hidden="true">✓</div>
+    <h2>Resposta registrada</h2>
+    <p>Obrigado — sua resposta já entrou na contagem.</p>
+    <div class="acoes">
+      <a class="btn" href="/resultado">Ver o resultado da turma</a>
+      <button type="button" class="btn secundario" id="btnOutra">Responder novamente</button>
+    </div>
+    <p class="total"><b id="totalRespostas">—</b> respostas até agora</p>
+  </section>
+
+  <footer>
+    <a href="/links">Todos os links da oficina</a>
+  </footer>
+
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let PERGUNTAS = [];
+
+function escapar(s) {
+  return String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function erro(msg) {
+  const el = $('erro');
+  if (!msg) { el.classList.add('oculto'); return; }
+  el.textContent = msg;
+  el.classList.remove('oculto');
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+async function carregar() {
+  const r = await fetch('/api/perguntas');
+  const d = await r.json();
+  PERGUNTAS = d.perguntas;
+
+  $('campos').innerHTML = PERGUNTAS.map((p) => {
+    const idTitulo = 'titulo_' + p.id;
+    const cabeca =
+      '<div class="pergunta-titulo" id="' + idTitulo + '">' +
+        '<span class="num">' + p.numero + '</span>' + escapar(p.titulo) +
+      '</div>' +
+      (p.ajuda ? '<p class="ajuda">' + escapar(p.ajuda) + '</p>' : '');
+    const abre = '<fieldset role="group" aria-labelledby="' + idTitulo + '">';
+
+    if (p.tipo === 'palavra') {
+      return abre + cabeca +
+        '<input type="text" id="campo_' + p.id + '" name="' + p.id + '" maxlength="24" ' +
+        'autocomplete="off" placeholder="Ex.: tempo" inputmode="text">' +
+        '<p class="contador" id="conta_' + p.id + '">uma palavra só</p>' +
+      '</fieldset>';
+    }
+
+    return abre + cabeca + '<div class="opcoes">' +
+      p.opcoes.map((o) =>
+        '<label class="opcao"><input type="radio" name="' + p.id + '" value="' + o.id + '">' +
+        '<span>' + escapar(o.rotulo) + '</span></label>').join('') +
+    '</div></fieldset>';
+  }).join('');
+
+  // Aviso ao vivo: a pergunta pede uma palavra, e quem escreve uma frase precisa
+  // saber disso ANTES de enviar — depois vira ruído na nuvem.
+  const campo = $('campo_desafio');
+  if (campo) {
+    campo.addEventListener('input', () => {
+      const palavras = campo.value.trim().split(/\s+/).filter(Boolean).length;
+      const conta = $('conta_desafio');
+      conta.textContent = palavras > 1
+        ? 'Escreva só uma palavra — vamos considerar a principal.'
+        : 'uma palavra só';
+      conta.className = palavras > 1 ? 'contador alerta' : 'contador';
+    });
+  }
+}
+
+$('formulario').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  erro('');
+
+  const dados = {};
+  for (const p of PERGUNTAS) {
+    if (p.tipo === 'palavra') {
+      dados[p.id] = ($('campo_' + p.id) ? $('campo_' + p.id).value : '').trim();
+    } else {
+      const marcado = document.querySelector('input[name="' + p.id + '"]:checked');
+      if (!marcado) { erro('Responda a pergunta ' + p.numero + '.'); return; }
+      dados[p.id] = marcado.value;
+    }
+  }
+  if (!dados.desafio) { erro('Escreva uma palavra para o maior desafio.'); return; }
+
+  $('btnEnviar').disabled = true;
+  $('btnEnviar').textContent = 'Enviando…';
+  try {
+    const r = await fetch('/api/respostas', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dados),
+    });
+    const d = await r.json();
+    if (!r.ok) { erro(d.erro || 'Não foi possível registrar.'); return; }
+
+    $('formulario').classList.add('oculto');
+    $('obrigado').classList.remove('oculto');
+    $('totalRespostas').textContent = d.total;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch {
+    erro('Erro de conexão. Tente novamente.');
+  } finally {
+    $('btnEnviar').disabled = false;
+    $('btnEnviar').textContent = 'Enviar resposta';
+  }
+});
+
+$('btnOutra').addEventListener('click', () => {
+  $('formulario').reset();
+  $('obrigado').classList.add('oculto');
+  $('formulario').classList.remove('oculto');
+  const conta = $('conta_desafio');
+  if (conta) { conta.textContent = 'uma palavra só'; conta.className = 'contador'; }
+});
+
+carregar();
+</script>
+</body>
+</html>

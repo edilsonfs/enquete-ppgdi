@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QR Code da Enquete — PPGDI</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Cpath d='M8 22V10h3v12H8zm6.5 0V14h3v8h-3zm6.5 0v-6h3v6h-3z' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+  /* Tela de projeção: fundo claro fixo, em qualquer tema do sistema. Projetor
+     lava o preto e destrói QR invertido — o código precisa ser escuro sobre
+     claro para a câmera ler do fundo da sala. */
+  :root {
+    --ground: #ffffff;
+    --ink: #0b1a26;
+    --ink-2: #51636f;
+    --marca: #1c5cab;
+    --linha: #dde4ea;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; background: var(--ground); color: var(--ink);
+    font-family: var(--sans); display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 3vh 20px; gap: 2.2vh;
+    text-align: center;
+  }
+  .texto { display: grid; gap: 1.4vh; justify-items: center; }
+  .eyebrow {
+    font-size: clamp(.7rem, 1.4vw, .9rem); letter-spacing: .14em; text-transform: uppercase;
+    color: var(--marca); font-weight: 600; margin: 0;
+  }
+  h1 { margin: 0; font-size: clamp(1.5rem, 4.2vw, 3rem); line-height: 1.1; letter-spacing: -.02em; text-wrap: balance; max-width: 18ch; }
+  .moldura {
+    background: #fff; border: 1px solid var(--linha); border-radius: 18px;
+    padding: clamp(14px, 2vw, 26px); box-shadow: 0 2px 30px rgba(11,26,38,.09);
+    width: min(52vh, 86vw); max-width: 100%; aspect-ratio: 1; display: grid; place-items: center;
+  }
+  .moldura img { width: 100%; height: 100%; max-width: 100%; display: block; }
+  .endereco {
+    font-size: clamp(1.15rem, 3.2vw, 2.1rem); font-weight: 700; letter-spacing: -.01em;
+    color: var(--marca); word-break: break-all; margin: 0;
+  }
+  .instrucao { margin: 0; color: var(--ink-2); font-size: clamp(.88rem, 1.7vw, 1.1rem); max-width: 40ch; }
+  .rodape { display: flex; gap: 1.4rem; flex-wrap: wrap; justify-content: center; font-size: .85rem; }
+  .rodape a { color: var(--ink-2); }
+  .rodape a:hover { color: var(--marca); }
+
+  @media (min-width: 900px) and (orientation: landscape) {
+    body { display: grid; grid-template-columns: 1fr auto; align-items: center; justify-items: start; gap: 4vw; padding-inline: 6vw; text-align: left; }
+    .texto { justify-items: start; gap: 1.6vh; }
+    h1 { max-width: 14ch; }
+    .moldura { width: min(62vh, 40vw); }
+    .rodape { grid-column: 1 / -1; justify-content: flex-start; }
+  }
+  @media print { .rodape { display: none; } body { min-height: auto; } }
+</style>
+</head>
+<body>
+
+  <div class="texto">
+    <p class="eyebrow">Percurso de Projeto 2 · PPGDI</p>
+    <h1>Aponte a câmera e responda</h1>
+    <p class="endereco" id="endereco">enquete.lexcode.tech</p>
+    <p class="instrucao">Três perguntas, resposta anônima, menos de 20 segundos. O resultado aparece na tela em tempo real.</p>
+  </div>
+
+  <div class="moldura">
+    <img id="qr" alt="QR code para abrir a enquete" src="/api/qrcode.svg">
+  </div>
+
+  <nav class="rodape">
+    <a href="/resultado">Ver resultado ao vivo</a>
+    <a href="/">Abrir a enquete</a>
+    <a href="/links">Todos os links</a>
+  </nav>
+
+<script>
+// A URL exibida vem do servidor, não do código da página: se o domínio mudar, o
+// texto e o QR mudam juntos, sem risco de a tela anunciar um endereço que o
+// código não aponta.
+fetch('/api/perguntas')
+  .then((r) => r.json())
+  .then((d) => {
+    if (!d.url_enquete) return;
+    document.getElementById('endereco').textContent =
+      d.url_enquete.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    document.getElementById('qr').src =
+      '/api/qrcode.svg?url=' + encodeURIComponent(d.url_enquete);
+  })
+  .catch(() => {});
+</script>
+</body>
+</html>

@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resultado da Enquete — PPGDI</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Cpath d='M8 22V10h3v12H8zm6.5 0V14h3v8h-3zm6.5 0v-6h3v6h-3z' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --ground: #f9f9f7;
+    --paper: #fcfcfb;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --ink-3: #898781;
+    --linha: #e1e0d9;
+    --marca: #1c5cab;
+    /* Rampa ordinal de um só tom — as duas perguntas são escalas ordenadas,
+       então a cor codifica a progressão, não identidade. Validada (claro):
+       ΔL >= 0,06 entre passos, extremo claro a 2,11:1 sobre o papel. */
+    --ord-1: #86b6ef;
+    --ord-2: #5598e7;
+    --ord-3: #2a78d6;
+    --ord-4: #1c5cab;
+    --ord-5: #104281;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0d0d0d;
+      --paper: #1a1a19;
+      --ink: #ffffff;
+      --ink-2: #c3c2b7;
+      --ink-3: #898781;
+      --linha: #2c2c2a;
+      --marca: #86b6ef;
+      /* Mesma rampa, repassada para a superfície escura. Validada (escuro). */
+      --ord-1: #b7d3f6;
+      --ord-2: #86b6ef;
+      --ord-3: #5598e7;
+      --ord-4: #2a78d6;
+      --ord-5: #184f95;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--ground); color: var(--ink);
+    font-family: var(--sans); line-height: 1.55; font-size: 16px; padding: 0 16px 4rem;
+  }
+  .envelope { max-width: 1000px; margin: 0 auto; }
+
+  header { padding: 2.2rem 0 1.2rem; display: flex; justify-content: space-between; align-items: flex-end; gap: 1.5rem; flex-wrap: wrap; }
+  .eyebrow { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--marca); font-weight: 600; margin: 0 0 .5rem; }
+  h1 { margin: 0; font-size: clamp(1.45rem, 4vw, 1.95rem); line-height: 1.15; letter-spacing: -.015em; }
+  .placar { text-align: right; }
+  .placar .n { font-size: 2.6rem; font-weight: 700; line-height: 1; display: block; }
+  .placar .r { font-size: .74rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+  .aovivo { display: inline-flex; align-items: center; gap: .4rem; font-size: .76rem; color: var(--ink-3); margin-top: .5rem; }
+  .ponto { width: 7px; height: 7px; border-radius: 50%; background: #0ca30c; animation: pulsa 2s ease-in-out infinite; }
+  @keyframes pulsa { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
+
+  .cartao { background: var(--paper); border: 1px solid var(--linha); border-radius: 12px; padding: 1.4rem; margin-bottom: 1.1rem; }
+  .cartao h2 { margin: 0 0 .25rem; font-size: 1.05rem; font-weight: 600; }
+  .cartao .sub { margin: 0 0 1.2rem; color: var(--ink-2); font-size: .87rem; }
+
+  /* ---- gráfico de barras horizontais ---- */
+  .barra-linha { display: grid; gap: .3rem; margin-bottom: .9rem; }
+  .barra-linha:last-child { margin-bottom: 0; }
+  .barra-topo { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; font-size: .89rem; }
+  .barra-topo .rot { color: var(--ink); }
+  .barra-topo .val { color: var(--ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; font-size: .85rem; }
+  .barra-topo .val b { color: var(--ink); font-size: .95rem; }
+  .trilho { height: 20px; background: var(--linha); border-radius: 4px; overflow: hidden; }
+  .preenche { height: 100%; border-radius: 4px; transition: width .5s cubic-bezier(.2,.7,.3,1); }
+  .vazio-aviso { color: var(--ink-3); font-size: .87rem; padding: .6rem 0; }
+
+  /* ---- nuvem ---- */
+  #nuvem { width: 100%; height: auto; display: block; }
+  .nuvem-vazia { text-align: center; color: var(--ink-3); padding: 3rem 1rem; font-size: .95rem; }
+  .legenda-nuvem { display: flex; flex-wrap: wrap; gap: .5rem 1.1rem; margin-top: 1rem; font-size: .82rem; color: var(--ink-2); }
+  .legenda-nuvem span { font-variant-numeric: tabular-nums; }
+  .legenda-nuvem b { color: var(--ink); }
+
+  /* ---- tabela ---- */
+  details { margin-top: 1rem; }
+  summary { cursor: pointer; font-size: .86rem; color: var(--marca); font-weight: 500; }
+  table { width: 100%; border-collapse: collapse; font-size: .87rem; margin-top: .8rem; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid var(--linha); }
+  th { font-size: .7rem; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; }
+  td.num, th.num { text-align: right; }
+
+  .rodape-links { display: flex; gap: 1.2rem; flex-wrap: wrap; justify-content: center; margin-top: 1.6rem; font-size: .85rem; }
+  .rodape-links a { color: var(--marca); }
+  @media (max-width: 560px) {
+    header { align-items: flex-start; }
+    .placar { text-align: left; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="envelope">
+
+  <header>
+    <div>
+      <p class="eyebrow">Percurso de Projeto 2 · PPGDI</p>
+      <h1>Resultado da enquete</h1>
+      <span class="aovivo"><span class="ponto"></span> atualiza sozinho a cada resposta</span>
+    </div>
+    <div class="placar">
+      <span class="n" id="total">—</span>
+      <span class="r">respostas</span>
+    </div>
+  </header>
+
+  <div id="graficos"></div>
+
+  <section class="cartao">
+    <h2>Maior desafio da turma</h2>
+    <p class="sub">Uma palavra por pessoa. O tamanho é a frequência — quanto maior, mais gente respondeu aquilo.</p>
+    <div id="nuvemBox">
+      <p class="nuvem-vazia">Aguardando as primeiras respostas.</p>
+    </div>
+    <div class="legenda-nuvem" id="legendaNuvem"></div>
+    <details>
+      <summary>Ver como tabela</summary>
+      <table>
+        <thead><tr><th>Palavra</th><th class="num">Respostas</th><th class="num">%</th></tr></thead>
+        <tbody id="tabelaPalavras"></tbody>
+      </table>
+    </details>
+  </section>
+
+  <nav class="rodape-links">
+    <a href="/">Responder a enquete</a>
+    <a href="/qrcode">QR code para projeção</a>
+    <a href="/links">Todos os links</a>
+  </nav>
+
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const CORES = ['--ord-1', '--ord-2', '--ord-3', '--ord-4', '--ord-5'];
+let assinaturaAnterior = '';
+
+const escapar = (s) => String(s === null || s === undefined ? '' : s)
+  .replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+/**
+ * Distribui os passos da rampa pelas opções. Com 4 opções numa rampa de 5, pula
+ * um passo do meio em vez de usar os quatro primeiros — assim o contraste entre
+ * vizinhos continua visível.
+ */
+function corDaOpcao(indice, quantas) {
+  if (quantas >= CORES.length) return CORES[Math.min(indice, CORES.length - 1)];
+  const passo = (CORES.length - 1) / Math.max(1, quantas - 1);
+  return CORES[Math.round(indice * passo)];
+}
+
+function desenharGraficos(graficos) {
+  $('graficos').innerHTML = graficos.map((g) => {
+    const maior = Math.max(1, ...g.opcoes.map((o) => o.n));
+    const linhas = g.opcoes.map((o, i) => {
+      // A barra é proporcional ao MAIOR valor, não ao total: com poucas
+      // respostas, escalar pelo total deixaria todas as barras invisíveis.
+      const largura = (o.n / maior) * 100;
+      return '<div class="barra-linha">' +
+        '<div class="barra-topo">' +
+          '<span class="rot">' + escapar(o.rotulo) + '</span>' +
+          '<span class="val"><b>' + o.n + '</b> · ' + o.pct.toFixed(1).replace('.', ',') + '%</span>' +
+        '</div>' +
+        '<div class="trilho"><div class="preenche" style="width:' + largura + '%;background:var(' + corDaOpcao(i, g.opcoes.length) + ')"></div></div>' +
+      '</div>';
+    }).join('');
+
+    return '<section class="cartao">' +
+      '<h2>' + g.numero + '. ' + escapar(g.titulo) + '</h2>' +
+      '<p class="sub">' + (g.total ? g.total + ' respostas' : 'Ainda sem respostas') + '</p>' +
+      (g.total ? linhas : '<p class="vazio-aviso">O gráfico aparece assim que a primeira resposta chegar.</p>') +
+    '</section>';
+  }).join('');
+}
+
+/**
+ * Nuvem de palavras em SVG.
+ *
+ * Posiciona cada palavra numa espiral, testando colisão de retângulos: a maior
+ * vai ao centro e as demais se acomodam ao redor. Sem biblioteca — o layout é
+ * determinístico, então a mesma distribuição desenha sempre igual, e a nuvem não
+ * "dança" a cada atualização.
+ */
+function desenharNuvem(palavras, total) {
+  const box = $('nuvemBox');
+  if (!palavras.length) {
+    box.innerHTML = '<p class="nuvem-vazia">Aguardando as primeiras respostas.</p>';
+    return;
+  }
+
+  const L = 1000, A = 460;
+  const maior = palavras[0].n;
+  const menor = palavras[palavras.length - 1].n;
+  const lista = palavras.slice(0, 60);
+
+  const medidor = document.createElement('canvas').getContext('2d');
+  const fonte = getComputedStyle(document.body).fontFamily;
+  const colocadas = [];
+
+  for (let i = 0; i < lista.length; i++) {
+    const p = lista[i];
+    // Raiz quadrada: a área do texto acompanha a frequência, e não a altura —
+    // sem isso a palavra mais citada domina a tela de forma desproporcional.
+    const t = maior === menor ? 1 : (p.n - menor) / (maior - menor);
+    const tamanho = Math.round(20 + Math.sqrt(t) * 62);
+    const peso = p.n >= maior * 0.6 ? 700 : 600;
+
+    medidor.font = peso + ' ' + tamanho + 'px ' + fonte;
+    const larg = medidor.measureText(p.palavra).width;
+    const alt = tamanho * 1.12;
+
+    let achou = false;
+    for (let passo = 0; passo < 4000; passo++) {
+      const angulo = passo * 0.22;
+      const raio = passo * 0.30;
+      const x = L / 2 + Math.cos(angulo) * raio * 1.7;
+      const y = A / 2 + Math.sin(angulo) * raio;
+
+      const r = { x1: x - larg / 2 - 7, y1: y - alt / 2 - 3, x2: x + larg / 2 + 7, y2: y + alt / 2 + 3 };
+      if (r.x1 < 4 || r.x2 > L - 4 || r.y1 < 4 || r.y2 > A - 4) continue;
+      if (colocadas.some((c) => !(r.x2 < c.x1 || r.x1 > c.x2 || r.y2 < c.y1 || r.y1 > c.y2))) continue;
+
+      colocadas.push({
+        x1: r.x1, y1: r.y1, x2: r.x2, y2: r.y2,
+        palavra: p.palavra, n: p.n, x: x, y: y, tamanho: tamanho, peso: peso, indice: i,
+      });
+      achou = true;
+      break;
+    }
+    if (!achou) break; // encheu a tela; o resto fica só na tabela
+  }
+
+  // Recorta o SVG na caixa que as palavras de fato ocuparam. Sem isso a espiral
+  // deixa faixas vazias em volta, e a nuvem aparece pequena e fora do centro.
+  const margem = 16;
+  const x1 = Math.min.apply(null, colocadas.map((c) => c.x1)) - margem;
+  const y1 = Math.min.apply(null, colocadas.map((c) => c.y1)) - margem;
+  const x2 = Math.max.apply(null, colocadas.map((c) => c.x2)) + margem;
+  const y2 = Math.max.apply(null, colocadas.map((c) => c.y2)) + margem;
+
+  box.innerHTML =
+    '<svg id="nuvem" viewBox="' + x1.toFixed(1) + ' ' + y1.toFixed(1) + ' ' +
+    (x2 - x1).toFixed(1) + ' ' + (y2 - y1).toFixed(1) + '" role="img" ' +
+    'aria-label="Nuvem das palavras mais citadas como maior desafio">' +
+    colocadas.map((c) => {
+      // Mais citada = tom mais forte. A rampa entra invertida de propósito: a
+      // palavra que domina a nuvem também domina o contraste.
+      const cor = corDaOpcao(4 - Math.min(c.indice, 4), 5);
+      const pct = total ? Math.round((c.n / total) * 100) : 0;
+      return '<text x="' + c.x.toFixed(1) + '" y="' + c.y.toFixed(1) + '" ' +
+        'text-anchor="middle" dominant-baseline="central" ' +
+        'font-size="' + c.tamanho + '" font-weight="' + c.peso + '" ' +
+        'fill="var(' + cor + ')" style="font-family:inherit">' +
+        '<title>' + escapar(c.palavra) + ' — ' + c.n + ' resposta(s), ' + pct + '%</title>' +
+        escapar(c.palavra) + '</text>';
+    }).join('') +
+    '</svg>';
+}
+
+function desenharTabela(palavras, total) {
+  $('tabelaPalavras').innerHTML = palavras.length
+    ? palavras.map((p) =>
+        '<tr><td>' + escapar(p.palavra) + '</td><td class="num">' + p.n + '</td>' +
+        '<td class="num">' + (total ? Math.round((p.n / total) * 100) : 0) + '%</td></tr>').join('')
+    : '<tr><td colspan="3">Sem respostas ainda.</td></tr>';
+
+  $('legendaNuvem').innerHTML = palavras.slice(0, 5).map((p) =>
+    '<span><b>' + escapar(p.palavra) + '</b> · ' + p.n + '</span>').join('');
+}
+
+async function carregar() {
+  let d;
+  try {
+    const r = await fetch('/api/resultados');
+    d = await r.json();
+  } catch { return; }
+
+  // Redesenha só quando algo mudou — senão a nuvem repinta a cada 4 s sem
+  // motivo, o que cansa a vista de quem está olhando o projetor.
+  const assinatura = d.total + '|' + (d.ultima_em || '');
+  if (assinatura === assinaturaAnterior) return;
+  assinaturaAnterior = assinatura;
+
+  $('total').textContent = d.total;
+  desenharGraficos(d.graficos);
+  desenharNuvem(d.palavras, d.total);
+  desenharTabela(d.palavras, d.total);
+}
+
+carregar();
+setInterval(carregar, 4000);
+// Ao voltar para a aba, atualiza na hora em vez de esperar o próximo ciclo.
+document.addEventListener('visibilitychange', () => { if (!document.hidden) carregar(); });
+</script>
+</body>
+</html>
