@@ -84,7 +84,12 @@
   .contador-vivo { margin-top: 1.6rem; text-align: center; font-size: .85rem; color: var(--ink-3); }
   .contador-vivo b { color: var(--ink); font-variant-numeric: tabular-nums; }
 
-  footer { margin-top: 2.4rem; text-align: center; font-size: .8rem; color: var(--ink-3); }
+  footer { margin-top: 2.4rem; padding-top: 1.2rem; border-top: 1px solid var(--linha); text-align: center; font-size: .8rem; color: var(--ink-3); }
+  footer .creditos { margin: 0 0 .6rem; }
+  .rodape-links { display: flex; gap: 1.1rem; flex-wrap: wrap; justify-content: center; font-size: .82rem; }
+  .rodape-links a { color: var(--marca); text-decoration: none; }
+  .rodape-links a:hover { text-decoration: underline; }
+  .rodape-links .sep { color: var(--linha); }
 </style>
 </head>
 <body>
@@ -140,17 +145,24 @@
         <span class="seta" aria-hidden="true">→</span>
       </a>
 
-      <span class="link desativado">
+      <span class="link desativado" id="itemCartilha">
         <span class="icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 012-2h13v18H6.5A2.5 2.5 0 014 19.5z"/><path d="M8 7h7M8 11h7"/></svg></span>
-        <span class="texto"><strong>Cartilha da oficina</strong><span>Em elaboração — o link entra aqui</span></span>
-        <span class="selo">em breve</span>
+        <span class="texto"><strong>Cartilha da oficina</strong><span id="subCartilha">Em elaboração — o link entra aqui</span></span>
+        <span class="selo" id="seloCartilha">em breve</span>
       </span>
     </div>
   </section>
 
   <p class="contador-vivo" id="contador"></p>
 
-  <footer>Mestrado Profissional em Direito e Inovação · UNICAP</footer>
+  <footer>
+    <p class="creditos">Mestrado Profissional em Direito e Inovação · UNICAP</p>
+    <nav class="rodape-links">
+      <a href="https://links.lexcode.tech">Página principal</a>
+      <span class="sep" aria-hidden="true">·</span>
+      <a href="https://www.lexcode.tech">Desenvolvido por LexCode</a>
+    </nav>
+  </footer>
 
 </div>
 
@@ -164,6 +176,29 @@ fetch('/api/resultados')
     if (typeof d.total !== 'number' || !d.total) return;
     document.getElementById('contador').innerHTML =
       '<b>' + d.total + '</b> ' + (d.total === 1 ? 'pessoa já respondeu' : 'pessoas já responderam');
+  })
+  .catch(() => {});
+
+// A cartilha entra sozinha: o facilitador publica o PDF no painel e este item
+// deixa de ser "em breve" sem ninguém precisar editar a página.
+fetch('/api/cartilha/info')
+  .then((r) => r.json())
+  .then((c) => {
+    if (!c.existe) return;
+    const item = document.getElementById('itemCartilha');
+    const link = document.createElement('a');
+    link.className = 'link';
+    link.href = '/cartilha';
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.innerHTML = item.innerHTML;
+    item.replaceWith(link);
+
+    const kb = c.tamanho ? Math.round(c.tamanho / 1024) : null;
+    link.querySelector('#subCartilha').textContent = 'PDF' + (kb ? ' · ' + kb + ' KB' : '');
+    const selo = link.querySelector('#seloCartilha');
+    selo.className = 'seta';
+    selo.textContent = '→';
   })
   .catch(() => {});
 </script>

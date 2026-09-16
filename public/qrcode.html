@@ -42,8 +42,9 @@
   }
   .instrucao { margin: 0; color: var(--ink-2); font-size: clamp(.88rem, 1.7vw, 1.1rem); max-width: 40ch; }
   .rodape { display: flex; gap: 1.4rem; flex-wrap: wrap; justify-content: center; font-size: .85rem; }
-  .rodape a { color: var(--ink-2); }
-  .rodape a:hover { color: var(--marca); }
+  .rodape a { color: var(--ink-2); text-decoration: none; }
+  .rodape a:hover { color: var(--marca); text-decoration: underline; }
+  .rodape .sep { color: var(--linha); }
 
   @media (min-width: 900px) and (orientation: landscape) {
     body { display: grid; grid-template-columns: 1fr auto; align-items: center; justify-items: start; gap: 4vw; padding-inline: 6vw; text-align: left; }
@@ -68,24 +69,30 @@
     <img id="qr" alt="QR code para abrir a enquete" src="/api/qrcode.svg">
   </div>
 
-  <nav class="rodape">
-    <a href="/resultado">Ver resultado ao vivo</a>
-    <a href="/">Abrir a enquete</a>
-    <a href="/links">Todos os links</a>
-  </nav>
+  <footer class="rodape">
+    <a href="https://links.lexcode.tech">Página principal</a>
+    <span class="sep" aria-hidden="true">·</span>
+    <a href="/resultado">Resultado ao vivo</a>
+    <span class="sep" aria-hidden="true">·</span>
+    <a href="https://www.lexcode.tech">Desenvolvido por LexCode</a>
+  </footer>
 
 <script>
 // A URL exibida vem do servidor, não do código da página: se o domínio mudar, o
 // texto e o QR mudam juntos, sem risco de a tela anunciar um endereço que o
 // código não aponta.
+// ?t= gera o QR do link exclusivo da turma; sem ele, o QR aponta para a enquete
+// comum, que cai na turma ativa.
+const TURMA = new URLSearchParams(location.search).get('t') || '';
+
 fetch('/api/perguntas')
   .then((r) => r.json())
   .then((d) => {
     if (!d.url_enquete) return;
+    const destino = d.url_enquete.replace(/\/$/, '') + (TURMA ? '/?t=' + encodeURIComponent(TURMA) : '');
     document.getElementById('endereco').textContent =
       d.url_enquete.replace(/^https?:\/\//, '').replace(/\/$/, '');
-    document.getElementById('qr').src =
-      '/api/qrcode.svg?url=' + encodeURIComponent(d.url_enquete);
+    document.getElementById('qr').src = '/api/qrcode.svg?url=' + encodeURIComponent(destino);
   })
   .catch(() => {});
 </script>

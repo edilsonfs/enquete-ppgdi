@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Administração da Enquete — PPGDI</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b1a26'/%3E%3Ccircle cx='16' cy='13' r='4' fill='%23fff'/%3E%3Cpath d='M8 25a8 8 0 0116 0z' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --ground: #f4f6f8;
+    --paper: #ffffff;
+    --paper-2: #f8fafc;
+    --ink: #0b1a26;
+    --ink-2: #51636f;
+    --ink-3: #8095a3;
+    --linha: #dde4ea;
+    --marca: #1c5cab;
+    --marca-2: #2a78d6;
+    --marca-fraca: #e8f0fa;
+    --verde: #0f6b47;
+    --verde-fraca: #e3f1ea;
+    --vermelho: #a32b23;
+    --vermelho-fraca: #f8e8e6;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0d1218;
+      --paper: #161d22;
+      --paper-2: #1b242b;
+      --ink: #e9eef2;
+      --ink-2: #a3b3bf;
+      --ink-3: #7b8d99;
+      --linha: #26313a;
+      --marca: #86b6ef;
+      --marca-2: #5598e7;
+      --marca-fraca: #17293d;
+      --verde: #6fc79a;
+      --verde-fraca: #14301f;
+      --vermelho: #e58a81;
+      --vermelho-fraca: #351a19;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--ground); color: var(--ink);
+    font-family: var(--sans); line-height: 1.55; font-size: 16px; padding: 0 16px 3rem;
+  }
+  .envelope { max-width: 940px; margin: 0 auto; }
+
+  header.topo {
+    display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+    flex-wrap: wrap; padding: 1.6rem 0 1.2rem; border-bottom: 1px solid var(--linha); margin-bottom: 1.4rem;
+  }
+  .eyebrow { font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--marca); font-weight: 600; margin: 0 0 .3rem; }
+  h1 { margin: 0; font-size: 1.4rem; letter-spacing: -.015em; }
+  .acoes-topo { display: flex; gap: .5rem; flex-wrap: wrap; }
+
+  .btn {
+    background: var(--marca); color: #fff; border: 0; padding: .6rem 1.1rem; border-radius: 8px;
+    font-size: .9rem; font-weight: 600; cursor: pointer; font-family: inherit;
+    text-decoration: none; display: inline-block; text-align: center;
+  }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn.secundario { background: transparent; color: var(--marca); border: 1px solid var(--marca); }
+  .btn.perigo { background: transparent; color: var(--vermelho); border: 1px solid var(--vermelho); }
+  .btn.pequeno { padding: .35rem .7rem; font-size: .8rem; }
+
+  .cartao { background: var(--paper); border: 1px solid var(--linha); border-radius: 12px; padding: 1.3rem; margin-bottom: 1.1rem; }
+  .cartao h2 { margin: 0 0 .25rem; font-size: 1.02rem; font-weight: 600; }
+  .cartao .sub { margin: 0 0 1.1rem; color: var(--ink-2); font-size: .87rem; max-width: 64ch; }
+
+  label { display: block; font-size: .82rem; font-weight: 600; margin-bottom: .3rem; }
+  input[type=text], input[type=password] {
+    width: 100%; padding: .65rem .8rem; border: 1px solid var(--linha); border-radius: 8px;
+    font-family: inherit; font-size: .95rem; background: var(--paper); color: var(--ink);
+  }
+  input:focus { outline: 2px solid var(--marca); outline-offset: -1px; border-color: var(--marca); }
+  .linha-form { display: flex; gap: .6rem; align-items: flex-end; flex-wrap: wrap; }
+  .linha-form > div { flex: 1 1 240px; }
+
+  .aviso { padding: .75rem 1rem; border-radius: 8px; font-size: .88rem; margin-bottom: 1rem; }
+  .aviso.erro { background: var(--vermelho-fraca); border: 1px solid var(--vermelho); color: var(--vermelho); }
+  .aviso.ok { background: var(--verde-fraca); border: 1px solid var(--verde); color: var(--verde); }
+  .oculto { display: none !important; }
+
+  /* ---- turmas ---- */
+  .turma {
+    border: 1px solid var(--linha); border-radius: 10px; padding: .9rem 1rem; margin-bottom: .6rem;
+    background: var(--paper-2);
+  }
+  .turma.ativa { border-color: var(--marca); background: var(--marca-fraca); }
+  .turma-topo { display: flex; align-items: center; gap: .7rem; flex-wrap: wrap; }
+  .turma-topo strong { font-size: .98rem; }
+  .selo {
+    font-size: .64rem; letter-spacing: .07em; text-transform: uppercase; font-weight: 700;
+    border-radius: 4px; padding: .15rem .45rem; white-space: nowrap;
+  }
+  .selo.viva { background: var(--verde); color: #fff; }
+  .selo.parada { background: var(--linha); color: var(--ink-2); }
+  .codigo { font-family: var(--mono); font-size: .76rem; color: var(--ink-3); }
+  .contagem { margin-left: auto; font-size: .85rem; color: var(--ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .contagem b { color: var(--ink); font-size: 1.05rem; }
+  .turma-acoes { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .7rem; }
+  .turma-links { display: flex; gap: .8rem; flex-wrap: wrap; margin-top: .6rem; font-size: .78rem; }
+  .turma-links a { color: var(--marca); }
+  .vazio { color: var(--ink-3); font-size: .88rem; padding: .6rem 0; }
+
+  /* ---- resultado ---- */
+  .barra-linha { display: grid; gap: .25rem; margin-bottom: .7rem; }
+  .barra-topo { display: flex; justify-content: space-between; gap: 1rem; font-size: .85rem; align-items: baseline; }
+  .barra-topo .val { color: var(--ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .barra-topo .val b { color: var(--ink); }
+  .trilho { height: 14px; background: var(--linha); border-radius: 3px; overflow: hidden; }
+  .preenche { height: 100%; border-radius: 3px; background: var(--marca-2); }
+  .pilulas { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .4rem; }
+  .pilula {
+    background: var(--marca-fraca); color: var(--marca); border-radius: 999px;
+    padding: .2rem .6rem; font-size: .8rem; font-variant-numeric: tabular-nums;
+  }
+  select {
+    padding: .5rem .7rem; border: 1px solid var(--linha); border-radius: 8px;
+    font-family: inherit; font-size: .9rem; background: var(--paper); color: var(--ink);
+    max-width: 100%;
+  }
+
+  /* ---- cartilha ---- */
+  .solta {
+    border: 2px dashed var(--linha); border-radius: 10px; padding: 1.6rem 1rem; text-align: center;
+    color: var(--ink-2); font-size: .9rem; cursor: pointer; background: var(--paper-2);
+  }
+  .solta:hover, .solta.sobre { border-color: var(--marca); background: var(--marca-fraca); color: var(--marca); }
+  .solta:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; }
+  .arquivo-atual {
+    display: flex; align-items: center; gap: .8rem; flex-wrap: wrap;
+    background: var(--verde-fraca); border: 1px solid var(--verde); color: var(--verde);
+    border-radius: 9px; padding: .75rem 1rem; font-size: .88rem; margin-bottom: .8rem;
+  }
+  .arquivo-atual .meta { color: var(--ink-2); font-size: .8rem; }
+
+  footer {
+    margin-top: 2rem; padding-top: 1.1rem; border-top: 1px solid var(--linha);
+    display: flex; gap: 1.2rem; flex-wrap: wrap; justify-content: center;
+    font-size: .82rem; color: var(--ink-3);
+  }
+  footer a { color: var(--marca); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+  footer .sep { color: var(--linha); }
+</style>
+</head>
+<body>
+<div class="envelope">
+
+  <header class="topo">
+    <div>
+      <p class="eyebrow">Percurso de Projeto 2 · PPGDI</p>
+      <h1>Administração da enquete</h1>
+    </div>
+    <div class="acoes-topo oculto" id="acoesTopo">
+      <button class="btn secundario" id="btnAtualizar">Atualizar</button>
+      <button class="btn secundario" id="btnSair">Sair</button>
+    </div>
+  </header>
+
+  <div id="aviso" class="aviso oculto"></div>
+
+  <section class="cartao" id="telaLogin" style="max-width:420px;margin-left:auto;margin-right:auto">
+    <h2>Acesso restrito</h2>
+    <p class="sub">Área do facilitador.</p>
+    <div style="margin-bottom:.8rem">
+      <label for="usuario">Usuário</label>
+      <input type="text" id="usuario" autocomplete="username" autocapitalize="none">
+    </div>
+    <div style="margin-bottom:1rem">
+      <label for="senha">Senha</label>
+      <input type="password" id="senha" autocomplete="current-password">
+    </div>
+    <button class="btn" id="btnEntrar" style="width:100%">Entrar</button>
+  </section>
+
+  <div id="telaPainel" class="oculto">
+
+    <section class="cartao">
+      <h2>Turmas</h2>
+      <p class="sub">
+        Quem responde nunca escolhe turma nem vê qual está ativa: o link é sempre o mesmo.
+        As respostas entram na turma marcada como <b>coletando</b>. Para coletar em duas turmas
+        ao mesmo tempo, use o link exclusivo de cada uma.
+      </p>
+
+      <div class="linha-form" style="margin-bottom:1.2rem">
+        <div>
+          <label for="nomeTurma">Nome da turma</label>
+          <input type="text" id="nomeTurma" placeholder="Ex.: Turma 2026.2 — quarta à noite" maxlength="80">
+        </div>
+        <button class="btn" id="btnCriar">Criar e ativar</button>
+      </div>
+
+      <div id="listaTurmas"></div>
+      <p class="vazio oculto" id="semTurmaAviso"></p>
+    </section>
+
+    <section class="cartao">
+      <h2>Resultado</h2>
+      <p class="sub">Escolha a turma para ver os números só dela.</p>
+      <div style="margin-bottom:1.1rem">
+        <select id="seletorTurma" aria-label="Turma a exibir"></select>
+      </div>
+      <div id="resultadoBox"></div>
+    </section>
+
+    <section class="cartao">
+      <h2>Cartilha</h2>
+      <p class="sub">
+        PDF de até 25 MB. Ao enviar um arquivo novo, ele substitui o anterior e o link na
+        página de links passa a funcionar na hora.
+      </p>
+      <div id="cartilhaAtual"></div>
+      <div class="solta" id="areaSolta" role="button" tabindex="0">
+        Clique para escolher o PDF, ou arraste o arquivo até aqui
+      </div>
+      <input type="file" id="arquivoCartilha" accept="application/pdf,.pdf" class="oculto">
+    </section>
+
+  </div>
+
+  <footer>
+    <a href="https://links.lexcode.tech">Página principal</a>
+    <span class="sep" aria-hidden="true">·</span>
+    <a href="/">Enquete</a>
+    <span class="sep" aria-hidden="true">·</span>
+    <a href="https://www.lexcode.tech">Desenvolvido por LexCode</a>
+  </footer>
+
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const CHAVE = 'enquete.admin';
+let token = sessionStorage.getItem(CHAVE) || '';
+let painel = null;
+let turmaVista = '';
+
+const escapar = (s) => String(s === null || s === undefined ? '' : s)
+  .replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function aviso(msg, tipo) {
+  const el = $('aviso');
+  if (!msg) { el.classList.add('oculto'); return; }
+  el.className = 'aviso ' + (tipo || 'erro');
+  el.textContent = msg;
+  el.classList.remove('oculto');
+  if (tipo === 'ok') setTimeout(() => el.classList.add('oculto'), 4000);
+}
+
+async function api(caminho, opcoes) {
+  const o = opcoes || {};
+  const r = await fetch(caminho, {
+    method: o.method || 'GET',
+    headers: Object.assign({ 'x-admin-session': token }, o.headers || {}),
+    body: o.body,
+  });
+  if (r.status === 401) { sair('Sessão expirada. Entre novamente.'); throw new Error('401'); }
+  const tipo = r.headers.get('content-type') || '';
+  const d = tipo.includes('json') ? await r.json() : {};
+  if (!r.ok) throw new Error(d.erro || 'Falha na operação.');
+  return d;
+}
+
+/* ---------- login ---------- */
+
+$('btnEntrar').onclick = async () => {
+  aviso('');
+  $('btnEntrar').disabled = true;
+  try {
+    const r = await fetch('/api/admin/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usuario: $('usuario').value, senha: $('senha').value }),
+    });
+    const d = await r.json();
+    if (!r.ok) { aviso(d.erro || 'Não foi possível entrar.'); return; }
+    token = d.token;
+    sessionStorage.setItem(CHAVE, token);
+    abrirPainel();
+  } catch {
+    aviso('Erro de conexão.');
+  } finally {
+    $('btnEntrar').disabled = false;
+  }
+};
+
+['usuario', 'senha'].forEach((id) => {
+  $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') $('btnEntrar').click(); });
+});
+
+function sair(msg) {
+  token = '';
+  sessionStorage.removeItem(CHAVE);
+  $('telaPainel').classList.add('oculto');
+  $('acoesTopo').classList.add('oculto');
+  $('telaLogin').classList.remove('oculto');
+  if (msg) aviso(msg);
+}
+
+$('btnSair').onclick = async () => {
+  try { await api('/api/admin/logout', { method: 'POST' }); } catch {}
+  sair('');
+};
+$('btnAtualizar').onclick = () => carregar();
+
+async function abrirPainel() {
+  $('telaLogin').classList.add('oculto');
+  $('telaPainel').classList.remove('oculto');
+  $('acoesTopo').classList.remove('oculto');
+  await carregar();
+}
+
+/* ---------- carregar ---------- */
+
+async function carregar() {
+  try {
+    painel = await api('/api/admin/painel');
+  } catch (e) {
+    if (e.message !== '401') aviso(e.message);
+    return;
+  }
+  desenharTurmas();
+  desenharSeletor();
+  desenharCartilha();
+  await desenharResultado();
+}
+
+function desenharTurmas() {
+  const base = painel.url_enquete || '';
+  $('listaTurmas').innerHTML = painel.turmas.length
+    ? painel.turmas.map((t) =>
+        '<div class="turma ' + (t.ativa ? 'ativa' : '') + '">' +
+          '<div class="turma-topo">' +
+            '<strong>' + escapar(t.nome) + '</strong>' +
+            '<span class="selo ' + (t.ativa ? 'viva' : 'parada') + '">' +
+              (t.ativa ? 'coletando' : 'parada') + '</span>' +
+            '<span class="codigo">' + escapar(t.id) + '</span>' +
+            '<span class="contagem"><b>' + t.respostas + '</b> respostas</span>' +
+          '</div>' +
+          '<div class="turma-acoes">' +
+            (t.ativa
+              ? '<button class="btn secundario pequeno" data-acao="desativar">Parar coleta</button>'
+              : '<button class="btn secundario pequeno" data-acao="ativar" data-id="' + t.id + '">Coletar nesta</button>') +
+            '<button class="btn perigo pequeno" data-acao="zerar" data-id="' + t.id + '" data-nome="' + escapar(t.nome) + '">Zerar respostas</button>' +
+            '<button class="btn perigo pequeno" data-acao="remover" data-id="' + t.id + '" data-nome="' + escapar(t.nome) + '">Remover turma</button>' +
+          '</div>' +
+          '<div class="turma-links">' +
+            '<a href="' + base + '/?t=' + t.id + '" target="_blank" rel="noopener">link exclusivo</a>' +
+            '<a href="/resultado?turma=' + t.id + '" target="_blank" rel="noopener">resultado</a>' +
+            '<a href="/nuvem?t=' + t.id + '" target="_blank" rel="noopener">nuvem</a>' +
+          '</div>' +
+        '</div>').join('')
+    : '<p class="vazio">Nenhuma turma ainda. Crie a primeira acima.</p>';
+
+  const semTurma = $('semTurmaAviso');
+  if (painel.sem_turma > 0) {
+    semTurma.textContent =
+      painel.sem_turma + ' resposta(s) sem turma — vieram antes de haver turmas, ou de uma turma removida. Entram no total geral.';
+    semTurma.classList.remove('oculto');
+  } else {
+    semTurma.classList.add('oculto');
+  }
+
+  $('listaTurmas').querySelectorAll('button[data-acao]').forEach((b) => {
+    b.onclick = () => acaoTurma(b.dataset.acao, b.dataset.id, b.dataset.nome);
+  });
+}
+
+async function acaoTurma(acao, id, nome) {
+  try {
+    if (acao === 'ativar') {
+      await api('/api/admin/turmas/' + id + '/ativar', { method: 'POST' });
+    } else if (acao === 'desativar') {
+      await api('/api/admin/turmas/desativar', { method: 'POST' });
+    } else if (acao === 'zerar') {
+      if (!confirm('Apagar todas as respostas de "' + nome + '"?\n\nNão dá para desfazer.')) return;
+      await api('/api/admin/reset?turma=' + id, { method: 'POST' });
+      aviso('Respostas da turma apagadas.', 'ok');
+    } else if (acao === 'remover') {
+      if (!confirm('Remover a turma "' + nome + '"?\n\nAs respostas dela NÃO são apagadas — passam a contar como "sem turma".')) return;
+      await api('/api/admin/turmas/' + id, { method: 'DELETE' });
+      aviso('Turma removida.', 'ok');
+      if (turmaVista === id) turmaVista = '';
+    }
+    await carregar();
+  } catch (e) {
+    if (e.message !== '401') aviso(e.message);
+  }
+}
+
+$('btnCriar').onclick = async () => {
+  const nome = $('nomeTurma').value.trim();
+  if (nome.length < 2) { aviso('Dê um nome à turma.'); return; }
+  try {
+    await api('/api/admin/turmas', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome: nome }),
+    });
+    $('nomeTurma').value = '';
+    aviso('Turma criada e já coletando.', 'ok');
+    await carregar();
+  } catch (e) {
+    if (e.message !== '401') aviso(e.message);
+  }
+};
+$('nomeTurma').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('btnCriar').click(); });
+
+/* ---------- resultado ---------- */
+
+function desenharSeletor() {
+  const sel = $('seletorTurma');
+  sel.innerHTML =
+    '<option value="">Todas as respostas (' + painel.geral.total + ')</option>' +
+    painel.turmas.map((t) =>
+      '<option value="' + t.id + '">' + escapar(t.nome) + ' (' + t.respostas + ')</option>').join('');
+  sel.value = turmaVista;
+  sel.onchange = async () => { turmaVista = sel.value; await desenharResultado(); };
+}
+
+async function desenharResultado() {
+  let d;
+  try {
+    d = await api('/api/admin/resultados' + (turmaVista ? '?turma=' + turmaVista : ''));
+  } catch (e) {
+    if (e.message !== '401') aviso(e.message);
+    return;
+  }
+
+  if (!d.total) {
+    $('resultadoBox').innerHTML = '<p class="vazio">Nenhuma resposta ainda nesta seleção.</p>';
+    return;
+  }
+
+  const graficos = d.graficos.map((g) => {
+    const maior = Math.max.apply(null, [1].concat(g.opcoes.map((o) => o.n)));
+    return '<div style="margin-bottom:1.3rem">' +
+      '<h3 style="font-size:.92rem;margin:0 0 .7rem">' + g.numero + '. ' + escapar(g.titulo) + '</h3>' +
+      g.opcoes.map((o) =>
+        '<div class="barra-linha">' +
+          '<div class="barra-topo"><span>' + escapar(o.rotulo) + '</span>' +
+          '<span class="val"><b>' + o.n + '</b> · ' + o.pct.toFixed(1).replace('.', ',') + '%</span></div>' +
+          '<div class="trilho"><div class="preenche" style="width:' + ((o.n / maior) * 100) + '%"></div></div>' +
+        '</div>').join('') +
+    '</div>';
+  }).join('');
+
+  const palavras = d.palavras.length
+    ? '<h3 style="font-size:.92rem;margin:0 0 .5rem">Maior desafio</h3><div class="pilulas">' +
+      d.palavras.map((p) => '<span class="pilula">' + escapar(p.palavra) + ' · ' + p.n + '</span>').join('') +
+      '</div>'
+    : '';
+
+  $('resultadoBox').innerHTML =
+    '<p class="sub" style="margin-bottom:1rem"><b>' + d.total + '</b> respostas' +
+    (d.turma ? ' · ' + escapar(d.turma.nome) : ' · todas as turmas') + '</p>' +
+    graficos + palavras;
+}
+
+/* ---------- cartilha ---------- */
+
+function desenharCartilha() {
+  const c = painel.cartilha || {};
+  if (!c.existe) {
+    $('cartilhaAtual').innerHTML =
+      '<p class="vazio">Nenhuma cartilha publicada. Na página de links o item aparece como "em breve".</p>';
+    return;
+  }
+  const kb = c.tamanho ? Math.round(c.tamanho / 1024) : null;
+  const quando = c.enviado_em ? new Date(c.enviado_em).toLocaleString('pt-BR') : '';
+  $('cartilhaAtual').innerHTML =
+    '<div class="arquivo-atual">' +
+      '<span>✓ Publicada</span>' +
+      '<span class="meta">' + escapar(c.nome || 'cartilha.pdf') +
+        (kb ? ' · ' + kb + ' KB' : '') + (quando ? ' · enviada em ' + quando : '') + '</span>' +
+      '<a class="btn secundario pequeno" href="/cartilha" target="_blank" rel="noopener" style="margin-left:auto">Abrir</a>' +
+      '<button class="btn perigo pequeno" id="btnRemoverCartilha">Remover</button>' +
+    '</div>';
+  $('btnRemoverCartilha').onclick = async () => {
+    if (!confirm('Remover a cartilha publicada?')) return;
+    try {
+      await api('/api/admin/cartilha', { method: 'DELETE' });
+      aviso('Cartilha removida.', 'ok');
+      await carregar();
+    } catch (e) { if (e.message !== '401') aviso(e.message); }
+  };
+}
+
+const area = $('areaSolta');
+const campoArquivo = $('arquivoCartilha');
+
+area.onclick = () => campoArquivo.click();
+area.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); campoArquivo.click(); } };
+area.addEventListener('dragover', (e) => { e.preventDefault(); area.classList.add('sobre'); });
+area.addEventListener('dragleave', () => area.classList.remove('sobre'));
+area.addEventListener('drop', (e) => {
+  e.preventDefault();
+  area.classList.remove('sobre');
+  if (e.dataTransfer.files && e.dataTransfer.files[0]) enviarCartilha(e.dataTransfer.files[0]);
+});
+campoArquivo.addEventListener('change', () => {
+  if (campoArquivo.files && campoArquivo.files[0]) enviarCartilha(campoArquivo.files[0]);
+});
+
+async function enviarCartilha(arquivo) {
+  if (!/\.pdf$/i.test(arquivo.name) && arquivo.type !== 'application/pdf') {
+    aviso('A cartilha precisa ser um PDF.');
+    return;
+  }
+  const textoOriginal = area.textContent;
+  area.textContent = 'Enviando ' + arquivo.name + '…';
+  try {
+    // Corpo binário puro: o servidor confere a assinatura %PDF antes de gravar.
+    await api('/api/admin/cartilha', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/pdf', 'x-nome-arquivo': arquivo.name },
+      body: arquivo,
+    });
+    aviso('Cartilha publicada.', 'ok');
+    await carregar();
+  } catch (e) {
+    if (e.message !== '401') aviso(e.message);
+  } finally {
+    area.textContent = textoOriginal;
+    campoArquivo.value = '';
+  }
+}
+
+if (token) abrirPainel(); else $('usuario').focus();
+</script>
+</body>
+</html>

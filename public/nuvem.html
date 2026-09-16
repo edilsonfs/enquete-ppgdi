@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nuvem de Desafios — PPGDI</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Cpath d='M22 21a4.5 4.5 0 000-9 6 6 0 00-11.5 1.6A3.7 3.7 0 0011 21z' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --ground: #f9f9f7;
+    --paper: #fcfcfb;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --ink-3: #898781;
+    --linha: #e1e0d9;
+    --marca: #1c5cab;
+    /* Rampa ordinal de um só tom, validada nos dois modos. A palavra mais
+       citada leva o passo mais forte. */
+    --ord-1: #86b6ef;
+    --ord-2: #5598e7;
+    --ord-3: #2a78d6;
+    --ord-4: #1c5cab;
+    --ord-5: #104281;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0d0d0d;
+      --paper: #1a1a19;
+      --ink: #ffffff;
+      --ink-2: #c3c2b7;
+      --ink-3: #898781;
+      --linha: #2c2c2a;
+      --marca: #86b6ef;
+      --ord-1: #b7d3f6;
+      --ord-2: #86b6ef;
+      --ord-3: #5598e7;
+      --ord-4: #2a78d6;
+      --ord-5: #184f95;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; background: var(--ground); color: var(--ink);
+    font-family: var(--sans); line-height: 1.5;
+    display: flex; flex-direction: column; padding: 0 20px;
+  }
+
+  header {
+    display: flex; justify-content: space-between; align-items: baseline;
+    gap: 1.5rem; flex-wrap: wrap; padding: 1.5rem 0 .8rem;
+    max-width: 1400px; width: 100%; margin: 0 auto;
+  }
+  .eyebrow { font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--marca); font-weight: 600; margin: 0 0 .3rem; }
+  h1 { margin: 0; font-size: clamp(1.2rem, 3vw, 1.6rem); letter-spacing: -.015em; }
+  .turma { font-size: .82rem; color: var(--ink-3); margin: .25rem 0 0; }
+  .placar { display: flex; align-items: baseline; gap: .5rem; }
+  .placar .n { font-size: 2.1rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+  .placar .r { font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+
+  /* A nuvem ocupa o espaço que sobra: é a única coisa desta página. */
+  main { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; padding: .5rem 0; }
+  #palco { width: 100%; max-width: 1400px; height: 100%; display: flex; align-items: center; justify-content: center; }
+  svg#nuvem { width: 100%; height: 100%; max-height: 72vh; display: block; overflow: visible; }
+
+  svg#nuvem text {
+    cursor: pointer;
+    transition: opacity .18s ease, transform .18s ease;
+    transform-box: fill-box; transform-origin: center;
+  }
+  svg#nuvem text:focus { outline: none; }
+  svg#nuvem text:focus-visible { outline: 2px solid var(--marca); outline-offset: 3px; }
+  svg#nuvem.tem-foco text { opacity: .22; }
+  svg#nuvem.tem-foco text.ativa { opacity: 1; transform: scale(1.06); }
+
+  .detalhe {
+    max-width: 1400px; width: 100%; margin: 0 auto; min-height: 76px;
+    display: flex; align-items: center; justify-content: center; padding-bottom: .4rem;
+  }
+  .cartao-detalhe {
+    background: var(--paper); border: 1px solid var(--linha); border-radius: 10px;
+    padding: .7rem 1.1rem; display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap;
+  }
+  .cartao-detalhe .palavra { font-size: 1.15rem; font-weight: 700; }
+  .cartao-detalhe .dado { font-size: .88rem; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .cartao-detalhe .dado b { color: var(--ink); }
+  .cartao-detalhe .dica { font-size: .78rem; color: var(--ink-3); }
+  .instrucao { font-size: .84rem; color: var(--ink-3); text-align: center; margin: 0; }
+
+  .vazio { text-align: center; color: var(--ink-3); padding: 4rem 1rem; }
+  .vazio strong { display: block; font-size: 1.1rem; color: var(--ink-2); margin-bottom: .4rem; font-weight: 600; }
+
+  footer {
+    max-width: 1400px; width: 100%; margin: 0 auto; padding: .9rem 0 1.2rem;
+    border-top: 1px solid var(--linha);
+    display: flex; gap: 1.2rem; flex-wrap: wrap; justify-content: center;
+    font-size: .82rem; color: var(--ink-3);
+  }
+  footer a { color: var(--marca); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+  footer .sep { color: var(--linha); }
+
+  @media (prefers-reduced-motion: reduce) { svg#nuvem text { transition: none; } }
+  @media (max-width: 620px) {
+    header { padding-top: 1.1rem; }
+    svg#nuvem { max-height: 58vh; }
+  }
+</style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <p class="eyebrow">Percurso de Projeto 2 · PPGDI</p>
+      <h1>O maior desafio da turma</h1>
+      <p class="turma" id="turma"></p>
+    </div>
+    <div class="placar">
+      <span class="n" id="total">—</span>
+      <span class="r">respostas</span>
+    </div>
+  </header>
+
+  <main>
+    <div id="palco">
+      <div class="vazio">
+        <strong>Aguardando as primeiras respostas</strong>
+        A nuvem se desenha sozinha conforme a turma responde.
+      </div>
+    </div>
+  </main>
+
+  <div class="detalhe" id="detalhe">
+    <p class="instrucao">Toque ou passe o cursor sobre uma palavra para ver quantas pessoas a escreveram.</p>
+  </div>
+
+  <footer>
+    <a href="https://links.lexcode.tech">Página principal</a>
+    <span class="sep" aria-hidden="true">·</span>
+    <a href="/resultado">Resultado completo</a>
+    <span class="sep" aria-hidden="true">·</span>
+    <a href="https://www.lexcode.tech">Desenvolvido por LexCode</a>
+  </footer>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const CORES = ['--ord-1', '--ord-2', '--ord-3', '--ord-4', '--ord-5'];
+const TURMA = new URLSearchParams(location.search).get('t') || '';
+let assinaturaAnterior = '';
+let dadosAtuais = { palavras: [], total: 0 };
+let fixada = null;
+
+const escapar = (s) => String(s === null || s === undefined ? '' : s)
+  .replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+/**
+ * Nuvem em SVG, sem biblioteca: espiral com colisão de retângulos. Layout
+ * determinístico — a mesma distribuição desenha sempre igual, então a nuvem não
+ * "dança" a cada atualização, o que seria insuportável num projetor.
+ */
+function desenhar(palavras, total) {
+  const palco = $('palco');
+  if (!palavras.length) {
+    palco.innerHTML =
+      '<div class="vazio"><strong>Aguardando as primeiras respostas</strong>' +
+      'A nuvem se desenha sozinha conforme a turma responde.</div>';
+    return;
+  }
+
+  const L = 1200, A = 620;
+  const maior = palavras[0].n;
+  const menor = palavras[palavras.length - 1].n;
+  const lista = palavras.slice(0, 80);
+
+  const medidor = document.createElement('canvas').getContext('2d');
+  const fonte = getComputedStyle(document.body).fontFamily;
+  const colocadas = [];
+
+  for (let i = 0; i < lista.length; i++) {
+    const p = lista[i];
+    // Raiz quadrada: a área do texto acompanha a frequência, não a altura — sem
+    // isso a palavra mais citada engole a tela.
+    const t = maior === menor ? 1 : (p.n - menor) / (maior - menor);
+    const tamanho = Math.round(24 + Math.sqrt(t) * 86);
+    const peso = p.n >= maior * 0.6 ? 700 : 600;
+
+    medidor.font = peso + ' ' + tamanho + 'px ' + fonte;
+    const larg = medidor.measureText(p.palavra).width;
+    const alt = tamanho * 1.12;
+
+    let achou = false;
+    for (let passo = 0; passo < 6000; passo++) {
+      const angulo = passo * 0.22;
+      const raio = passo * 0.28;
+      const x = L / 2 + Math.cos(angulo) * raio * 1.75;
+      const y = A / 2 + Math.sin(angulo) * raio;
+
+      const r = { x1: x - larg / 2 - 9, y1: y - alt / 2 - 4, x2: x + larg / 2 + 9, y2: y + alt / 2 + 4 };
+      if (r.x1 < 4 || r.x2 > L - 4 || r.y1 < 4 || r.y2 > A - 4) continue;
+      if (colocadas.some((c) => !(r.x2 < c.x1 || r.x1 > c.x2 || r.y2 < c.y1 || r.y1 > c.y2))) continue;
+
+      colocadas.push({
+        x1: r.x1, y1: r.y1, x2: r.x2, y2: r.y2,
+        palavra: p.palavra, n: p.n, x: x, y: y, tamanho: tamanho, peso: peso, indice: i,
+      });
+      achou = true;
+      break;
+    }
+    if (!achou) break; // encheu a tela
+  }
+
+  // Recorta o SVG na caixa que as palavras ocuparam: sem isso sobram faixas
+  // vazias e a nuvem aparece pequena no meio da tela.
+  const m = 20;
+  const bx1 = Math.min.apply(null, colocadas.map((c) => c.x1)) - m;
+  const by1 = Math.min.apply(null, colocadas.map((c) => c.y1)) - m;
+  const bx2 = Math.max.apply(null, colocadas.map((c) => c.x2)) + m;
+  const by2 = Math.max.apply(null, colocadas.map((c) => c.y2)) + m;
+
+  palco.innerHTML =
+    '<svg id="nuvem" viewBox="' + bx1.toFixed(1) + ' ' + by1.toFixed(1) + ' ' +
+    (bx2 - bx1).toFixed(1) + ' ' + (by2 - by1).toFixed(1) + '" role="list" ' +
+    'aria-label="Palavras mais citadas como maior desafio">' +
+    colocadas.map((c) => {
+      const cor = CORES[4 - Math.min(c.indice, 4)];
+      const pct = total ? Math.round((c.n / total) * 100) : 0;
+      return '<text role="listitem" tabindex="0" data-palavra="' + escapar(c.palavra) + '" ' +
+        'data-n="' + c.n + '" data-pct="' + pct + '" ' +
+        'x="' + c.x.toFixed(1) + '" y="' + c.y.toFixed(1) + '" ' +
+        'text-anchor="middle" dominant-baseline="central" ' +
+        'font-size="' + c.tamanho + '" font-weight="' + c.peso + '" ' +
+        'fill="var(' + cor + ')" style="font-family:inherit" ' +
+        'aria-label="' + escapar(c.palavra) + ': ' + c.n + ' de ' + total + ' respostas">' +
+        escapar(c.palavra) + '</text>';
+    }).join('') +
+    '</svg>';
+
+  ligarInteracao();
+}
+
+function mostrarDetalhe(palavra, n, pct, fixa) {
+  $('detalhe').innerHTML =
+    '<div class="cartao-detalhe">' +
+      '<span class="palavra">' + escapar(palavra) + '</span>' +
+      '<span class="dado"><b>' + n + '</b> ' + (n === 1 ? 'pessoa escreveu' : 'pessoas escreveram') + '</span>' +
+      '<span class="dado"><b>' + pct + '%</b> da turma</span>' +
+      (fixa ? '<span class="dica">clique de novo para soltar</span>' : '') +
+    '</div>';
+}
+
+function limparDetalhe() {
+  $('detalhe').innerHTML =
+    '<p class="instrucao">Toque ou passe o cursor sobre uma palavra para ver quantas pessoas a escreveram.</p>';
+}
+
+function apagarDestaque(svg) {
+  svg.classList.remove('tem-foco');
+  svg.querySelectorAll('text').forEach((t) => t.classList.remove('ativa'));
+  limparDetalhe();
+}
+
+/**
+ * Passar o cursor destaca; clicar fixa. Fixar existe para a apresentação: dá
+ * para deixar uma palavra em evidência enquanto se fala dela, sem manter o
+ * cursor parado em cima.
+ */
+function ligarInteracao() {
+  const svg = $('nuvem');
+  if (!svg) return;
+
+  const focar = (el) => {
+    svg.classList.add('tem-foco');
+    svg.querySelectorAll('text').forEach((t) => t.classList.toggle('ativa', t === el));
+    mostrarDetalhe(
+      el.dataset.palavra, Number(el.dataset.n), Number(el.dataset.pct),
+      fixada === el.dataset.palavra
+    );
+  };
+  const soltar = () => { if (!fixada) apagarDestaque(svg); };
+
+  svg.querySelectorAll('text').forEach((el) => {
+    el.addEventListener('mouseenter', () => focar(el));
+    el.addEventListener('focus', () => focar(el));
+    el.addEventListener('mouseleave', soltar);
+    el.addEventListener('blur', soltar);
+    el.addEventListener('click', () => {
+      fixada = fixada === el.dataset.palavra ? null : el.dataset.palavra;
+      if (fixada) focar(el); else apagarDestaque(svg);
+    });
+    el.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); el.click(); }
+    });
+  });
+
+  // Uma palavra fixada pode sumir quando a turma responde e ela cai do topo;
+  // reaplicar o destaque mantém a apresentação no lugar.
+  if (fixada) {
+    const alvo = svg.querySelector('text[data-palavra="' + CSS.escape(fixada) + '"]');
+    if (alvo) focar(alvo); else { fixada = null; limparDetalhe(); }
+  }
+}
+
+async function carregar() {
+  let d;
+  try {
+    const r = await fetch('/api/resultados' + (TURMA ? '?turma=' + encodeURIComponent(TURMA) : ''));
+    d = await r.json();
+  } catch { return; }
+
+  // Redesenha só quando algo mudou — senão a nuvem repinta a cada 4 s sem
+  // motivo, e quem está olhando o projetor sente o pisca.
+  const assinatura = d.total + '|' + (d.ultima_em || '');
+  if (assinatura === assinaturaAnterior) return;
+  assinaturaAnterior = assinatura;
+
+  dadosAtuais = d;
+  $('total').textContent = d.total;
+  $('turma').textContent = d.turma ? d.turma.nome : '';
+  desenhar(d.palavras, d.total);
+}
+
+carregar();
+setInterval(carregar, 4000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) carregar(); });
+
+// Redesenhar no resize mantém o empacotamento coerente com a largura nova.
+let esperaResize;
+window.addEventListener('resize', () => {
+  clearTimeout(esperaResize);
+  esperaResize = setTimeout(() => {
+    if (dadosAtuais.palavras && dadosAtuais.palavras.length) {
+      desenhar(dadosAtuais.palavras, dadosAtuais.total);
+    }
+  }, 250);
+});
+</script>
+</body>
+</html>

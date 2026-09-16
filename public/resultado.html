@@ -54,6 +54,8 @@
   .placar { text-align: right; }
   .placar .n { font-size: 2.6rem; font-weight: 700; line-height: 1; display: block; }
   .placar .r { font-size: .74rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+  .turma-atual { margin: .3rem 0 0; font-size: .85rem; color: var(--ink-2); font-weight: 600; }
+  .turma-atual:empty { display: none; }
   .aovivo { display: inline-flex; align-items: center; gap: .4rem; font-size: .76rem; color: var(--ink-3); margin-top: .5rem; }
   .ponto { width: 7px; height: 7px; border-radius: 50%; background: #0ca30c; animation: pulsa 2s ease-in-out infinite; }
   @keyframes pulsa { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
@@ -88,8 +90,14 @@
   th { font-size: .7rem; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; }
   td.num, th.num { text-align: right; }
 
-  .rodape-links { display: flex; gap: 1.2rem; flex-wrap: wrap; justify-content: center; margin-top: 1.6rem; font-size: .85rem; }
-  .rodape-links a { color: var(--marca); }
+  .rodape-links {
+    display: flex; gap: 1.1rem; flex-wrap: wrap; justify-content: center;
+    margin-top: 1.8rem; padding-top: 1.1rem; border-top: 1px solid var(--linha);
+    font-size: .83rem; color: var(--ink-3);
+  }
+  .rodape-links a { color: var(--marca); text-decoration: none; }
+  .rodape-links a:hover { text-decoration: underline; }
+  .rodape-links .sep { color: var(--linha); }
   @media (max-width: 560px) {
     header { align-items: flex-start; }
     .placar { text-align: left; }
@@ -104,6 +112,7 @@
     <div>
       <p class="eyebrow">Percurso de Projeto 2 · PPGDI</p>
       <h1>Resultado da enquete</h1>
+      <p class="turma-atual" id="turmaAtual"></p>
       <span class="aovivo"><span class="ponto"></span> atualiza sozinho a cada resposta</span>
     </div>
     <div class="placar">
@@ -130,11 +139,15 @@
     </details>
   </section>
 
-  <nav class="rodape-links">
-    <a href="/">Responder a enquete</a>
-    <a href="/qrcode">QR code para projeção</a>
-    <a href="/links">Todos os links</a>
-  </nav>
+  <footer class="rodape-links">
+    <a href="https://links.lexcode.tech">Página principal</a>
+    <span class="sep" aria-hidden="true">·</span>
+    <a href="/nuvem">Nuvem em tela cheia</a>
+    <span class="sep" aria-hidden="true">·</span>
+    <a href="/qrcode">QR code</a>
+    <span class="sep" aria-hidden="true">·</span>
+    <a href="https://www.lexcode.tech">Desenvolvido por LexCode</a>
+  </footer>
 
 </div>
 
@@ -276,10 +289,14 @@ function desenharTabela(palavras, total) {
     '<span><b>' + escapar(p.palavra) + '</b> · ' + p.n + '</span>').join('');
 }
 
+// Aceita ?turma= e ?t= — o painel gera um, o link exclusivo da turma gera outro.
+const PARAMS = new URLSearchParams(location.search);
+const TURMA = PARAMS.get('turma') || PARAMS.get('t') || '';
+
 async function carregar() {
   let d;
   try {
-    const r = await fetch('/api/resultados');
+    const r = await fetch('/api/resultados' + (TURMA ? '?turma=' + encodeURIComponent(TURMA) : ''));
     d = await r.json();
   } catch { return; }
 
@@ -290,6 +307,10 @@ async function carregar() {
   assinaturaAnterior = assinatura;
 
   $('total').textContent = d.total;
+  // Quando a tela está filtrada, dizer de qual turma evita ler o número errado
+  // como se fosse o da oficina inteira.
+  const rotuloTurma = $('turmaAtual');
+  if (rotuloTurma) rotuloTurma.textContent = d.turma ? d.turma.nome : '';
   desenharGraficos(d.graficos);
   desenharNuvem(d.palavras, d.total);
   desenharTabela(d.palavras, d.total);
