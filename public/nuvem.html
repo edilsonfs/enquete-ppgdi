@@ -442,14 +442,15 @@ async function carregar() {
   } catch { return; }
 
   // Redesenha só quando algo mudou — senão a nuvem repinta a cada 4 s sem
-  // motivo, e quem está olhando o projetor sente o pisca.
-  const assinatura = d.total + '|' + (d.ultima_em || '');
+  // motivo, e quem está olhando o projetor sente o pisca. A turma entra na
+  // assinatura porque trocar de campanha muda tudo, mesmo que o total coincida.
+  const assinatura = (d.turma ? d.turma.id : 'todas') + '|' + d.total + '|' + (d.ultima_em || '');
   if (assinatura === assinaturaAnterior) return;
   assinaturaAnterior = assinatura;
 
   dadosAtuais = d;
   $('total').textContent = d.total;
-  $('turma').textContent = d.turma ? d.turma.nome : '';
+  $('turma').textContent = d.turma ? d.turma.nome : 'Todas as turmas somadas';
   desenhar(d.palavras, d.total);
 }
 

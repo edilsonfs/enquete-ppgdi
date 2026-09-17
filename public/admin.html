@@ -376,6 +376,9 @@ async function acaoTurma(acao, id, nome) {
   try {
     if (acao === 'ativar') {
       await api('/api/admin/turmas/' + id + '/ativar', { method: 'POST' });
+      // O painel acompanha a troca: ficar olhando a turma antiga depois de
+      // mudar a coleta foi exatamente o que confundiu na oficina.
+      turmaVista = id;
     } else if (acao === 'desativar') {
       await api('/api/admin/turmas/desativar', { method: 'POST' });
     } else if (acao === 'zerar') {
@@ -398,10 +401,13 @@ $('btnCriar').onclick = async () => {
   const nome = $('nomeTurma').value.trim();
   if (nome.length < 2) { aviso('Dê um nome à turma.'); return; }
   try {
-    await api('/api/admin/turmas', {
+    const lista = await api('/api/admin/turmas', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nome: nome }),
     });
+    // A turma nova já nasce coletando; o painel muda para ela junto.
+    const nova = Array.isArray(lista) ? lista.find((t) => t.ativa) : null;
+    if (nova) turmaVista = nova.id;
     $('nomeTurma').value = '';
     aviso('Turma criada e já coletando.', 'ok');
     await carregar();
@@ -415,10 +421,22 @@ $('nomeTurma').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('bt
 
 function desenharSeletor() {
   const sel = $('seletorTurma');
+  const ativa = painel.turmas.find((t) => t.ativa);
+
+  // Abre na turma que está coletando: é o mesmo recorte que está projetado na
+  // parede, então painel e telão dizem a mesma coisa.
+  if (!turmaVista) turmaVista = ativa ? ativa.id : 'todas';
+
   sel.innerHTML =
-    '<option value="">Todas as respostas (' + painel.geral.total + ')</option>' +
     painel.turmas.map((t) =>
-      '<option value="' + t.id + '">' + escapar(t.nome) + ' (' + t.respostas + ')</option>').join('');
+      '<option value="' + t.id + '">' + escapar(t.nome) + ' (' + t.respostas + ')' +
+      (t.ativa ? ' — coletando' : '') + '</option>').join('') +
+    '<option value="todas">Todas as turmas somadas (' + painel.geral.total + ')</option>';
+
+  // A turma selecionada pode ter sido removida na última ação.
+  if (![...sel.options].some((o) => o.value === turmaVista)) {
+    turmaVista = ativa ? ativa.id : 'todas';
+  }
   sel.value = turmaVista;
   sel.onchange = async () => { turmaVista = sel.value; await desenharResultado(); };
 }
@@ -426,7 +444,7 @@ function desenharSeletor() {
 async function desenharResultado() {
   let d;
   try {
-    d = await api('/api/admin/resultados' + (turmaVista ? '?turma=' + turmaVista : ''));
+    d = await api('/api/admin/resultados?turma=' + encodeURIComponent(turmaVista || 'todas'));
   } catch (e) {
     if (e.message !== '401') aviso(e.message);
     return;
@@ -457,8 +475,12 @@ async function desenharResultado() {
     : '';
 
   $('resultadoBox').innerHTML =
-    '<p class="sub" style="margin-bottom:1rem"><b>' + d.total + '</b> respostas' +
-    (d.turma ? ' · ' + escapar(d.turma.nome) : ' · todas as turmas') + '</p>' +
+    '<p class="sub" style="margin-bottom:1rem"><b>' + d.total + '</b> respostas · ' +
+    (d.turma ? escapar(d.turma.nome) : 'todas as turmas somadas') +
+    // O painel manda o id explícito, então o escopo devolvido é sempre "turma";
+    // quem sabe se ela é a ativa é a lista de turmas já carregada aqui.
+    (d.turma && painel.turmas.some((t) => t.id === d.turma.id && t.ativa)
+      ? ' <b>— é o que está projetado agora</b>' : '') + '</p>' +
     graficos + palavras;
 }
 

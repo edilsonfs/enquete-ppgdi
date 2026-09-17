@@ -302,7 +302,9 @@ async function carregar() {
 
   // Redesenha só quando algo mudou — senão a nuvem repinta a cada 4 s sem
   // motivo, o que cansa a vista de quem está olhando o projetor.
-  const assinatura = d.total + '|' + (d.ultima_em || '');
+  // A turma entra na assinatura porque trocar de campanha muda tudo, mesmo que
+  // o total coincida por acaso.
+  const assinatura = (d.turma ? d.turma.id : 'todas') + '|' + d.total + '|' + (d.ultima_em || '');
   if (assinatura === assinaturaAnterior) return;
   assinaturaAnterior = assinatura;
 
@@ -310,7 +312,7 @@ async function carregar() {
   // Quando a tela está filtrada, dizer de qual turma evita ler o número errado
   // como se fosse o da oficina inteira.
   const rotuloTurma = $('turmaAtual');
-  if (rotuloTurma) rotuloTurma.textContent = d.turma ? d.turma.nome : '';
+  if (rotuloTurma) rotuloTurma.textContent = d.turma ? d.turma.nome : 'Todas as turmas somadas';
   desenharGraficos(d.graficos);
   desenharNuvem(d.palavras, d.total);
   desenharTabela(d.palavras, d.total);

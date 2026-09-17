@@ -153,9 +153,33 @@ app.post('/api/respostas', (req, res) => {
   res.status(201).json({ ok: true, ...resultados(turma ? turma.id : null) });
 });
 
+/**
+ * Decide QUAL recorte uma tela de resultado deve mostrar.
+ *
+ * O padrão é a turma ativa, e não o agregado de tudo. Sem isso a nuvem
+ * projetada continuava exibindo a turma anterior depois de trocar de campanha:
+ * quem estava na sala via os desafios de outra turma achando que eram os seus.
+ *
+ * - `?turma=<id>`  -> aquela turma, explicitamente
+ * - `?turma=todas` -> o histórico inteiro, somado
+ * - sem parâmetro  -> a turma ativa; só quando não existe turma ativa é que cai
+ *                     no agregado (o caso de quem ainda não usa turmas)
+ */
+function resolverEscopo(param) {
+  if (String(param ?? '') === 'todas') return { turma: null, escopo: 'todas' };
+
+  const pedida = buscarTurma(param);
+  if (pedida) return { turma: pedida, escopo: 'turma' };
+
+  const ativa = turmaAtiva();
+  if (ativa) return { turma: ativa, escopo: 'ativa' };
+
+  return { turma: null, escopo: 'todas' };
+}
+
 app.get('/api/resultados', (req, res) => {
-  const turma = buscarTurma(req.query.turma);
-  res.json(resultados(turma ? turma.id : null));
+  const { turma, escopo } = resolverEscopo(req.query.turma);
+  res.json({ ...resultados(turma ? turma.id : null), escopo });
 });
 
 /** QR code — da enquete, ou de uma turma específica quando `url` é passada. */
@@ -297,8 +321,10 @@ app.delete('/api/admin/turmas/:id', exigirAdmin, (req, res) => {
 });
 
 app.get('/api/admin/resultados', exigirAdmin, (req, res) => {
-  const turma = buscarTurma(req.query.turma);
-  res.json(resultados(turma ? turma.id : null));
+  // Mesma regra das telas públicas, para o painel nunca mostrar um recorte
+  // diferente do que está projetado na parede.
+  const { turma, escopo } = resolverEscopo(req.query.turma);
+  res.json({ ...resultados(turma ? turma.id : null), escopo });
 });
 
 /** Sobe ou substitui a cartilha. Corpo = bytes do PDF. */
