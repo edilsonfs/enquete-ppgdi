@@ -18,6 +18,9 @@ import {
   turmaAtiva,
   removerTurma,
   respostasSemTurma,
+  turmaMaisRecente,
+  obterConfig,
+  definirConfig,
 } from './db.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -171,9 +174,22 @@ function resolverEscopo(param) {
   const pedida = buscarTurma(param);
   if (pedida) return { turma: pedida, escopo: 'turma' };
 
+  // O que a projeção mostra é escolha do facilitador, feita no painel.
+  const exibicao = obterConfig('exibicao');
+  if (exibicao === 'todas') return { turma: null, escopo: 'todas' };
+  const escolhida = buscarTurma(exibicao);
+  if (escolhida) return { turma: escolhida, escopo: 'escolhida' };
+
   const ativa = turmaAtiva();
   if (ativa) return { turma: ativa, escopo: 'ativa' };
 
+  // Sem escolha e sem turma ativa, cai na última turma criada — nunca na soma
+  // de campanhas. Somar turmas diferentes sem ninguém ter pedido foi o que
+  // fazia a nuvem projetada mostrar a turma errada.
+  const recente = turmaMaisRecente();
+  if (recente) return { turma: recente, escopo: 'recente' };
+
+  // Só quando não existe turma nenhuma: aí "tudo" é o único conjunto que há.
   return { turma: null, escopo: 'todas' };
 }
 
@@ -284,14 +300,31 @@ app.post('/api/admin/logout', exigirAdmin, (req, res) => {
 });
 
 app.get('/api/admin/painel', exigirAdmin, (_req, res) => {
+  const { turma, escopo } = resolverEscopo(null);
   res.json({
     turmas: listarTurmas(),
     sem_turma: respostasSemTurma(),
     geral: resultados(),
     cartilha: cartilhaInfo(),
     url_enquete: URL_ENQUETE,
+    // O que as telas de projeção estão mostrando neste momento, e se isso veio
+    // de uma escolha explícita ou de um padrão.
+    exibicao: obterConfig('exibicao'),
+    exibindo: { turma: turma ? { id: turma.id, nome: turma.nome } : null, escopo },
     gerado_em: new Date().toISOString(),
   });
+});
+
+/** Define o recorte que as telas de projeção mostram: um id de turma ou "todas". */
+app.post('/api/admin/exibicao', exigirAdmin, (req, res) => {
+  const valor = String(req.body?.valor ?? '').trim();
+  if (valor !== 'todas' && !buscarTurma(valor)) {
+    return res.status(400).json({ erro: 'Escolha uma turma válida ou "todas".' });
+  }
+  definirConfig('exibicao', valor);
+  const { turma, escopo } = resolverEscopo(null);
+  console.log(`[admin] exibicao: ${valor}`);
+  res.json({ ok: true, exibicao: valor, exibindo: { turma, escopo } });
 });
 
 app.post('/api/admin/turmas', exigirAdmin, (req, res) => {
@@ -302,11 +335,15 @@ app.post('/api/admin/turmas', exigirAdmin, (req, res) => {
   // Turma nova entra ativa: quem acabou de criar quer coletar nela, e esquecer
   // de ativar mandaria as respostas para a turma anterior sem ninguém notar.
   ativarTurma(turma.id);
+  // E a projeção passa a mostrá-la. Criar turma e continuar vendo a anterior no
+  // telão foi o problema relatado na oficina.
+  definirConfig('exibicao', turma.id);
   res.status(201).json(listarTurmas());
 });
 
 app.post('/api/admin/turmas/:id/ativar', exigirAdmin, (req, res) => {
   if (!ativarTurma(req.params.id)) return res.status(404).json({ erro: 'Turma não encontrada.' });
+  definirConfig('exibicao', req.params.id);
   res.json(listarTurmas());
 });
 
@@ -317,6 +354,9 @@ app.post('/api/admin/turmas/desativar', exigirAdmin, (_req, res) => {
 
 app.delete('/api/admin/turmas/:id', exigirAdmin, (req, res) => {
   if (!removerTurma(req.params.id)) return res.status(404).json({ erro: 'Turma não encontrada.' });
+  // Sem isso a projeção ficaria apontando para uma turma que não existe mais e
+  // cairia no padrão sem ninguém entender por quê.
+  if (obterConfig('exibicao') === req.params.id) definirConfig('exibicao', null);
   res.json(listarTurmas());
 });
 

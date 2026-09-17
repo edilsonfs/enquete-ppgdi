@@ -202,8 +202,26 @@
     </section>
 
     <section class="cartao">
-      <h2>Resultado</h2>
-      <p class="sub">Escolha a turma para ver os números só dela.</p>
+      <h2>O que aparece na projeção</h2>
+      <p class="sub">
+        Comanda a nuvem e o resultado exibidos no telão — <code>/nuvem</code> e <code>/resultado</code>.
+        Cada turma tem a sua nuvem; somar todas é uma escolha, nunca o padrão.
+      </p>
+      <div class="linha-form">
+        <div>
+          <label for="seletorExibicao">Mostrar no telão</label>
+          <select id="seletorExibicao" style="width:100%"></select>
+        </div>
+      </div>
+      <p class="vazio" id="exibicaoAgora"></p>
+    </section>
+
+    <section class="cartao">
+      <h2>Conferir resultados e palavras</h2>
+      <p class="sub">
+        Só para leitura aqui no painel — trocar a turma nesta lista <b>não</b> muda o telão.
+        Mostra os gráficos e todas as palavras do maior desafio, com a contagem de cada uma.
+      </p>
       <div style="margin-bottom:1.1rem">
         <select id="seletorTurma" aria-label="Turma a exibir"></select>
       </div>
@@ -326,9 +344,52 @@ async function carregar() {
     return;
   }
   desenharTurmas();
+  desenharExibicao();
   desenharSeletor();
   desenharCartilha();
   await desenharResultado();
+}
+
+/**
+ * Escolhe o recorte que vai ao telão. É a única coisa no painel que muda o que
+ * a sala inteira vê, por isso fica separada do seletor de leitura logo abaixo —
+ * mexer num não mexe no outro.
+ */
+function desenharExibicao() {
+  const sel = $('seletorExibicao');
+  const atual = painel.exibindo || {};
+
+  sel.innerHTML =
+    painel.turmas.map((t) =>
+      '<option value="' + t.id + '">' + escapar(t.nome) + ' (' + t.respostas + ')' +
+      (t.ativa ? ' — coletando' : '') + '</option>').join('') +
+    '<option value="todas">Todas as turmas somadas (' + painel.geral.total + ')</option>';
+
+  // painel.exibicao é a escolha gravada; sem escolha, marca o que o servidor
+  // está de fato exibindo, para o seletor nunca mentir sobre o telão.
+  const marcado = painel.exibicao || (atual.turma ? atual.turma.id : 'todas');
+  if ([...sel.options].some((o) => o.value === marcado)) sel.value = marcado;
+
+  const nome = atual.turma ? atual.turma.nome : 'todas as turmas somadas';
+  const porPadrao = !painel.exibicao;
+  $('exibicaoAgora').innerHTML =
+    'No telão agora: <b>' + escapar(nome) + '</b>' +
+    (porPadrao ? ' — por padrão, sem escolha gravada' : '') +
+    ' · <a href="/nuvem" target="_blank" rel="noopener">abrir nuvem</a>' +
+    ' · <a href="/resultado" target="_blank" rel="noopener">abrir resultado</a>';
+
+  sel.onchange = async () => {
+    try {
+      await api('/api/admin/exibicao', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ valor: sel.value }),
+      });
+      aviso('Projeção atualizada. O telão acompanha em alguns segundos.', 'ok');
+      await carregar();
+    } catch (e) {
+      if (e.message !== '401') aviso(e.message);
+    }
+  };
 }
 
 function desenharTurmas() {
@@ -421,11 +482,13 @@ $('nomeTurma').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('bt
 
 function desenharSeletor() {
   const sel = $('seletorTurma');
+  const projetada = (painel.exibindo || {}).turma;
   const ativa = painel.turmas.find((t) => t.ativa);
+  const padrao = projetada ? projetada.id : (ativa ? ativa.id : 'todas');
 
-  // Abre na turma que está coletando: é o mesmo recorte que está projetado na
-  // parede, então painel e telão dizem a mesma coisa.
-  if (!turmaVista) turmaVista = ativa ? ativa.id : 'todas';
+  // Abre no mesmo recorte que está no telão, para painel e projeção contarem a
+  // mesma história logo na abertura.
+  if (!turmaVista) turmaVista = padrao;
 
   sel.innerHTML =
     painel.turmas.map((t) =>
@@ -434,11 +497,16 @@ function desenharSeletor() {
     '<option value="todas">Todas as turmas somadas (' + painel.geral.total + ')</option>';
 
   // A turma selecionada pode ter sido removida na última ação.
-  if (![...sel.options].some((o) => o.value === turmaVista)) {
-    turmaVista = ativa ? ativa.id : 'todas';
-  }
+  if (![...sel.options].some((o) => o.value === turmaVista)) turmaVista = padrao;
   sel.value = turmaVista;
   sel.onchange = async () => { turmaVista = sel.value; await desenharResultado(); };
+}
+
+/** O recorte que estou lendo é o mesmo que está no telão? */
+function mesmoRecorteDaProjecao(d) {
+  const proj = (painel.exibindo || {}).turma;
+  if (!proj && !d.turma) return true;          // ambos "todas"
+  return Boolean(proj && d.turma && proj.id === d.turma.id);
 }
 
 async function desenharResultado() {
@@ -478,9 +546,8 @@ async function desenharResultado() {
     '<p class="sub" style="margin-bottom:1rem"><b>' + d.total + '</b> respostas · ' +
     (d.turma ? escapar(d.turma.nome) : 'todas as turmas somadas') +
     // O painel manda o id explícito, então o escopo devolvido é sempre "turma";
-    // quem sabe se ela é a ativa é a lista de turmas já carregada aqui.
-    (d.turma && painel.turmas.some((t) => t.id === d.turma.id && t.ativa)
-      ? ' <b>— é o que está projetado agora</b>' : '') + '</p>' +
+    // quem sabe o que está no telão é o campo `exibindo` do painel.
+    (mesmoRecorteDaProjecao(d) ? ' <b>— é o que está no telão agora</b>' : '') + '</p>' +
     graficos + palavras;
 }
 

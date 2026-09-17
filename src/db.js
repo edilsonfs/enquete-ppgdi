@@ -29,6 +29,11 @@ db.exec(`
     ativa      INTEGER NOT NULL DEFAULT 0,
     criado_em  TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS config (
+    chave  TEXT PRIMARY KEY,
+    valor  TEXT NOT NULL
+  );
 `);
 
 /**
@@ -109,6 +114,36 @@ export function removerTurma(id) {
   db.prepare('UPDATE respostas SET turma_id = NULL WHERE turma_id = ?').run(String(id));
   db.prepare('DELETE FROM turmas WHERE id = ?').run(String(id));
   return turma;
+}
+
+/** A turma criada por último. Serve de rede quando nenhuma está ativa. */
+export function turmaMaisRecente() {
+  return db.prepare('SELECT * FROM turmas ORDER BY criado_em DESC LIMIT 1').get() ?? null;
+}
+
+/* ------------------------------------------------------------------ *
+ * Configuração
+ *
+ * Hoje guarda uma chave só: `exibicao`, o recorte que as telas de projeção
+ * mostram. É uma decisão do facilitador, e por isso mora no banco e não em
+ * memória — precisa sobreviver ao redeploy e valer para todas as telas abertas,
+ * que podem estar em máquinas diferentes.
+ * ------------------------------------------------------------------ */
+
+export function obterConfig(chave) {
+  const linha = db.prepare('SELECT valor FROM config WHERE chave = ?').get(String(chave));
+  return linha ? linha.valor : null;
+}
+
+export function definirConfig(chave, valor) {
+  if (valor === null || valor === undefined) {
+    db.prepare('DELETE FROM config WHERE chave = ?').run(String(chave));
+    return null;
+  }
+  db.prepare(
+    'INSERT INTO config (chave, valor) VALUES (?, ?) ON CONFLICT(chave) DO UPDATE SET valor = excluded.valor'
+  ).run(String(chave), String(valor));
+  return String(valor);
 }
 
 /** Quantas respostas ficaram sem turma (anteriores ao recurso, ou órfãs). */
